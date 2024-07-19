@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WEB SAST - Project</title>
+  <link rel="stylesheet" href="project.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="title"><h1>WebProtectors</h1></div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="project.html">Features</a></li>
+        <li><a href="analysis.html">About</a></li>
+        <li><a href="sugesstions.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header> 
+
+  <section id="project">
+    <h2>Project</h2>
+    <select id="languageSelect" title="input">
+      <option value="javascript">JavaScript</option>
+      <option value="python">Python</option>
+      <option value="java">Java</option>
+      <!-- Add more options as needed -->
+    </select>
+    <input type="file" placeholder="file.." id="fileInput" multiple>
+    <button id="scanButton">Scan</button>
+  </section>
+
+  <script src="project.js"></script>
+</body>
+</html>

@@ -1,0 +1,2028 @@
+{
+    "rules": [
+      {
+        "id": "JS001",
+        "description": "Detect usage of eval() function",
+        "pattern": "\\beval\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using eval() as it can lead to code injection vulnerabilities. Use safer alternatives such as JSON.parse() for parsing JSON."
+      },
+      {
+        "id": "JS002",
+        "description": "Detect potential XSS in innerHTML assignments",
+        "pattern": "\\.innerHTML\\s*=\\s*",
+        "severity": "high",
+        "recommendation": "Sanitize input before assigning to innerHTML. Consider using textContent or other safer methods."
+      },
+      {
+        "id": "JS003",
+        "description": "Detect potential XSS in document.write()",
+        "pattern": "document\\.write\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using document.write(). Use safer methods like DOM manipulation APIs."
+      },
+      {
+        "id": "JS004",
+        "description": "Detect insecure usage of setTimeout() or setInterval() with string arguments",
+        "pattern": "setTimeout\\s*\\(\\s*['\"]",
+        "severity": "medium",
+        "recommendation": "Avoid using string arguments in setTimeout() or setInterval(). Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS005",
+        "description": "Detect insecure AJAX requests without proper validation",
+        "pattern": "\\$.ajax\\s*\\(.*\\)",
+        "severity": "medium",
+        "recommendation": "Ensure all AJAX requests validate and sanitize input data. Use proper headers and parameter encoding."
+      },
+      {
+        "id": "JS006",
+        "description": "Detect potential SQL Injection via concatenated SQL query strings",
+        "pattern": "\\+\\s*['\"].*['\"]\\s*\\+",
+        "severity": "high",
+        "recommendation": "Use parameterized queries or prepared statements to prevent SQL Injection."
+      },
+      {
+        "id": "JS007",
+        "description": "Detect hardcoded sensitive information",
+        "pattern": "(password|apiKey|secret)\\s*[:=]\\s*['\"].+['\"]",
+        "severity": "high",
+        "recommendation": "Avoid hardcoding sensitive information in the source code. Use environment variables or secure storage solutions."
+      },
+      {
+        "id": "JS008",
+        "description": "Detect usage of deprecated JavaScript functions",
+        "pattern": "\\b(escape|unescape|with|alert|prompt|confirm)\\b",
+        "severity": "low",
+        "recommendation": "Avoid using deprecated functions. Refer to modern alternatives and best practices."
+      },
+      {
+        "id": "JS009",
+        "description": "Detect unhandled promise rejections",
+        "pattern": "\\.then\\s*\\(.*\\)\\s*\\.catch\\s*\\(.*\\)\\s*\\.finally\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure all promises have proper error handling using catch() or try-catch blocks with async/await."
+      },
+      {
+        "id": "JS010",
+        "description": "Detect usage of unsafe regular expressions",
+        "pattern": "/(\\(.+\\)|\\[.*\\]|\\{.*\\})/g",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize user input used in regular expressions. Avoid complex and inefficient regex patterns that may lead to ReDoS (Regular Expression Denial of Service)."
+      },
+      {
+        "id": "JS011",
+        "description": "Detect usage of localStorage for sensitive data",
+        "pattern": "\\blocalStorage\\.setItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid storing sensitive data in localStorage. Use secure cookies or other secure storage solutions."
+      },
+      {
+        "id": "JS012",
+        "description": "Detect lack of input validation in forms",
+        "pattern": "\\bform\\b.*\\.submit\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure all form inputs are properly validated and sanitized before submission."
+      },
+      {
+        "id": "JS013",
+        "description": "Detect insecure use of WebSocket connections",
+        "pattern": "\\bnew\\s+WebSocket\\s*\\(",
+        "severity": "high",
+        "recommendation": "Use secure WebSocket connections (wss://) and validate all input and output data."
+      },
+      {
+        "id": "JS014",
+        "description": "Detect usage of insecure random number generation",
+        "pattern": "\\bMath\\.random\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Use cryptographically secure random number generators like window.crypto.getRandomValues() for security-sensitive operations."
+      },
+      {
+        "id": "JS015",
+        "description": "Detect lack of Content Security Policy (CSP)",
+        "pattern": "<meta\\s+http-equiv=['\"]Content-Security-Policy['\"]",
+        "severity": "medium",
+        "recommendation": "Implement a strong Content Security Policy (CSP) to mitigate XSS and other injection attacks."
+      },
+      {
+        "id": "JS016",
+        "description": "Detect insecure usage of window.open()",
+        "pattern": "window\\.open\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid using window.open() with user-supplied URLs. Use strict URL validation and consider other methods for opening new windows."
+      },
+      {
+        "id": "JS017",
+        "description": "Detect potential insecure use of postMessage()",
+        "pattern": "\\bwindow\\.postMessage\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate the target origin and message content in postMessage() to prevent data leakage and code injection."
+      },
+      {
+        "id": "JS018",
+        "description": "Detect lack of HTTPOnly flag in cookies",
+        "pattern": "document\\.cookie\\s*=",
+        "severity": "high",
+        "recommendation": "Set the HTTPOnly flag on cookies to prevent access from JavaScript and mitigate XSS attacks."
+      },
+      {
+        "id": "JS019",
+        "description": "Detect usage of insecure cross-origin resource sharing (CORS) policy",
+        "pattern": "Access-Control-Allow-Origin\\s*:\\s*\\*",
+        "severity": "high",
+        "recommendation": "Restrict the CORS policy to specific origins to prevent unauthorized access."
+      },
+      {
+        "id": "JS020",
+        "description": "Detect lack of encryption for sensitive data transmission",
+        "pattern": "\\bhttp:\\/\\/",
+        "severity": "high",
+        "recommendation": "Use HTTPS for transmitting sensitive data to ensure confidentiality and integrity."
+      },
+      {
+        "id": "JS021",
+        "description": "Detect insecure usage of XMLHttpRequest without proper validation",
+        "pattern": "\\bnew\\s+XMLHttpRequest\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize all data sent via XMLHttpRequest to prevent injection attacks."
+      },
+      {
+        "id": "JS022",
+        "description": "Detect missing CSRF protection tokens",
+        "pattern": "csrfToken\\s*:\\s*null",
+        "severity": "high",
+        "recommendation": "Implement CSRF protection using tokens to prevent cross-site request forgery attacks."
+      },
+      {
+        "id": "JS023",
+        "description": "Detect potential information leakage via console.log",
+        "pattern": "console\\.log\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid logging sensitive information to the console in production environments."
+      },
+      {
+        "id": "JS024",
+        "description": "Detect potential use of insecure libraries",
+        "pattern": "require\\(['\"](.*)[@^~].*['\"]\\)",
+        "severity": "medium",
+        "recommendation": "Regularly update and audit third-party libraries for known vulnerabilities."
+      },
+      {
+        "id": "JS025",
+        "description": "Detect lack of output encoding for HTML contexts",
+        "pattern": "\\binnerHTML\\b",
+        "severity": "high",
+        "recommendation": "Apply proper output encoding to data before inserting it into HTML contexts to prevent XSS."
+      },
+      {
+        "id": "JS026",
+        "description": "Detect usage of deprecated JavaScript features",
+        "pattern": "\\b(Function|arguments|event)\\b",
+        "severity": "low",
+        "recommendation": "Avoid using deprecated features. Refer to modern alternatives and best practices."
+      },
+      {
+        "id": "JS027",
+        "description": "Detect potential insecure file upload handling",
+        "pattern": "\\binput\\s+type=['\"]file['\"]",
+        "severity": "high",
+        "recommendation": "Validate and sanitize file uploads. Implement proper file type and size restrictions."
+      },
+      {
+        "id": "JS028",
+        "description": "Detect usage of window.location for redirects",
+        "pattern": "window\\.location\\s*=\\s*",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize URLs before performing redirects to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS029",
+        "description": "Detect lack of proper error handling",
+        "pattern": "\\btry\\s*\\{[^}]*\\}\\s*catch\\s*\\(\\s*\\w*\\s*\\)\\s*\\{[^}]*\\}\\s*finally\\s*\\{[^}]*\\}",
+        "severity": "medium",
+        "recommendation": "Ensure all critical operations have proper error handling mechanisms to maintain application stability."
+      },
+      {
+        "id": "JS030",
+        "description": "Detect usage of insecure random number generation with Math.random()",
+        "pattern": "\\bMath\\.random\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Use a cryptographically secure random number generator for security-sensitive operations."
+      },
+      {
+        "id": "JS031",
+        "description": "Detect usage of synchronous XMLHttpRequest",
+        "pattern": "XMLHttpRequest\\(\\).open\\(.*false\\)",
+        "severity": "medium",
+        "recommendation": "Avoid synchronous XMLHttpRequest as it can block the main thread and degrade performance. Use asynchronous requests instead."
+      },
+      {
+        "id": "JS032",
+        "description": "Detect insecure usage of fetch without credentials",
+        "pattern": "fetch\\s*\\(.*\\)",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests include credentials if needed and validate responses."
+      },
+      {
+        "id": "JS033",
+        "description": "Detect usage of Function constructor",
+        "pattern": "\\bFunction\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using the Function constructor as it can lead to code injection vulnerabilities. Use safer alternatives."
+      },
+      {
+        "id": "JS034",
+        "description": "Detect insecure usage of window.location.href for redirects",
+        "pattern": "window\\.location\\.href\\s*=\\s*",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize URLs before assigning them to window.location.href to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS035",
+        "description": "Detect insecure usage of URL.createObjectURL",
+        "pattern": "URL\\.createObjectURL\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of blob URLs and revoke them when no longer needed to avoid memory leaks."
+      },
+      {
+        "id": "JS036",
+        "description": "Detect lack of security headers",
+        "pattern": "res\\.setHeader\\s*\\(",
+        "severity": "high",
+        "recommendation": "Implement security headers like Content-Security-Policy, X-Content-Type-Options, and X-Frame-Options to enhance security."
+      },
+      {
+        "id": "JS037",
+        "description": "Detect insecure usage of document.cookie without secure flag",
+        "pattern": "document\\.cookie\\s*=\\s*",
+        "severity": "high",
+        "recommendation": "Set the secure flag on cookies to ensure they are only sent over HTTPS."
+      },
+      {
+        "id": "JS038",
+        "description": "Detect lack of validation for URL parameters",
+        "pattern": "location\\.search",
+        "severity": "high",
+        "recommendation": "Validate and sanitize URL parameters to prevent injection attacks."
+      },
+      {
+        "id": "JS039",
+        "description": "Detect lack of CSP for script-src",
+        "pattern": "Content-Security-Policy.*script-src",
+        "severity": "high",
+        "recommendation": "Implement a strict Content-Security-Policy for script-src to mitigate XSS attacks."
+      },
+      {
+        "id": "JS040",
+        "description": "Detect usage of dangerous DOM properties",
+        "pattern": "\\b(innerHTML|outerHTML|document.write)\\b",
+        "severity": "high",
+        "recommendation": "Avoid using dangerous DOM properties. Use safer methods like textContent or DOM manipulation APIs."
+      },
+      {
+        "id": "JS041",
+        "description": "Detect usage of weak cryptographic algorithms",
+        "pattern": "\\b(md5|sha1|DES|RC4)\\b",
+        "severity": "high",
+        "recommendation": "Avoid using weak cryptographic algorithms. Use stronger algorithms like SHA-256 or AES."
+      },
+      {
+        "id": "JS042",
+        "description": "Detect usage of innerText instead of textContent",
+        "pattern": "\\binnerText\\b",
+        "severity": "low",
+        "recommendation": "Use textContent instead of innerText for better performance and security."
+      },
+      {
+        "id": "JS043",
+        "description": "Detect missing or insecure Cross-Origin Resource Sharing (CORS) configuration",
+        "pattern": "Access-Control-Allow-Origin",
+        "severity": "high",
+        "recommendation": "Ensure CORS is configured securely, restricting allowed origins as much as possible."
+      },
+      {
+        "id": "JS044",
+        "description": "Detect usage of untrusted code libraries",
+        "pattern": "require\\s*\\(['\"]",
+        "severity": "medium",
+        "recommendation": "Ensure all third-party libraries are from trusted sources and regularly updated."
+      },
+      {
+        "id": "JS045",
+        "description": "Detect potential unescaped user input in HTML attributes",
+        "pattern": "\\bsetAttribute\\s*\\(",
+        "severity": "high",
+        "recommendation": "Escape and validate user inputs before using them in HTML attributes."
+      },
+      {
+        "id": "JS046",
+        "description": "Detect missing or insufficient HSTS header",
+        "pattern": "Strict-Transport-Security",
+        "severity": "high",
+        "recommendation": "Implement HTTP Strict Transport Security (HSTS) to enforce HTTPS connections."
+      },
+      {
+        "id": "JS047",
+        "description": "Detect usage of unsafe HTML templates",
+        "pattern": "\\btemplate\\b",
+        "severity": "medium",
+        "recommendation": "Ensure HTML templates do not contain untrusted user input to prevent XSS attacks."
+      },
+      {
+        "id": "JS048",
+        "description": "Detect usage of document.domain for subdomain communications",
+        "pattern": "document\\.domain\\s*=",
+        "severity": "medium",
+        "recommendation": "Avoid using document.domain to relax same-origin policy. Use secure cross-origin communication techniques."
+      },
+      {
+        "id": "JS049",
+        "description": "Detect usage of the 'with' statement",
+        "pattern": "\\bwith\\b",
+        "severity": "low",
+        "recommendation": "Avoid using the 'with' statement as it can lead to unpredictable behavior and make code harder to debug."
+      },
+      {
+        "id": "JS050",
+        "description": "Detect lack of secure SameSite attribute on cookies",
+        "pattern": "document\\.cookie\\s*=",
+        "severity": "high",
+        "recommendation": "Set the SameSite attribute to Strict or Lax on cookies to prevent CSRF attacks."
+      },
+      {
+        "id": "JS051",
+        "description": "Detect usage of window.eval()",
+        "pattern": "window\\.eval\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using window.eval() as it can lead to code injection vulnerabilities. Use safer alternatives."
+      },
+      {
+        "id": "JS052",
+        "description": "Detect insecure use of setImmediate() with string arguments",
+        "pattern": "setImmediate\\s*\\(\\s*['\"]",
+        "severity": "medium",
+        "recommendation": "Avoid using string arguments in setImmediate(). Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS053",
+        "description": "Detect usage of unsafe innerHTML assignments in jQuery",
+        "pattern": "\\$\\(.*\\)\\.html\\s*\\(",
+        "severity": "high",
+        "recommendation": "Sanitize input before assigning to jQuery html(). Consider using text() or other safer methods."
+      },
+      {
+        "id": "JS054",
+        "description": "Detect insecure usage of window.name for data storage",
+        "pattern": "window\\.name\\s*=",
+        "severity": "medium",
+        "recommendation": "Avoid using window.name for storing sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS055",
+        "description": "Detect usage of window.history.replaceState() with untrusted data",
+        "pattern": "window\\.history\\.replaceState\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to window.history.replaceState() is sanitized to prevent XSS."
+      },
+      {
+        "id": "JS056",
+        "description": "Detect usage of window.history.pushState() with untrusted data",
+        "pattern": "window\\.history\\.pushState\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to window.history.pushState() is sanitized to prevent XSS."
+      },
+      {
+        "id": "JS057",
+        "description": "Detect insecure usage of window.location.assign()",
+        "pattern": "window\\.location\\.assign\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize URLs before using window.location.assign() to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS058",
+        "description": "Detect lack of HTTPOnly and secure flags on cookies",
+        "pattern": "document\\.cookie\\s*=",
+        "severity": "high",
+        "recommendation": "Set HTTPOnly and secure flags on cookies to prevent access from JavaScript and ensure transmission over HTTPS."
+      },
+      {
+        "id": "JS059",
+        "description": "Detect usage of untrusted JSON.parse() input",
+        "pattern": "JSON\\.parse\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure JSON input is from a trusted source before parsing to prevent malicious code execution."
+      },
+      {
+        "id": "JS060",
+        "description": "Detect lack of validation for dynamically generated script tags",
+        "pattern": "document\\.createElement\\s*\\(['\"]script['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic script URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS061",
+        "description": "Detect lack of validation for dynamically generated iframe tags",
+        "pattern": "document\\.createElement\\s*\\(['\"]iframe['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic iframe URLs to prevent XSS and clickjacking attacks."
+      },
+      {
+        "id": "JS062",
+        "description": "Detect usage of untrusted input in document.write()",
+        "pattern": "document\\.write\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using document.write() with untrusted input. Use safer DOM manipulation methods."
+      },
+      {
+        "id": "JS063",
+        "description": "Detect lack of escape for user input in string literals",
+        "pattern": "\\b['\"][^'\"]*\\+\\s*userInput\\s*\\+\\s*['\"][^'\"]*['\"]",
+        "severity": "high",
+        "recommendation": "Escape user input before using it in string literals to prevent injection attacks."
+      },
+      {
+        "id": "JS064",
+        "description": "Detect usage of untrusted data in URL query strings",
+        "pattern": "\\bURL\\s*\\+\\s*['\"]\\?[^'\"]*['\"]",
+        "severity": "high",
+        "recommendation": "Validate and encode query parameters to prevent injection attacks."
+      },
+      {
+        "id": "JS065",
+        "description": "Detect lack of validation for dynamically generated object URLs",
+        "pattern": "URL\\.createObjectURL\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate data before creating object URLs to prevent potential misuse."
+      },
+      {
+        "id": "JS066",
+        "description": "Detect usage of untrusted input in document.getElementById()",
+        "pattern": "document\\.getElementById\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate IDs before using them with document.getElementById() to prevent DOM-based XSS."
+      },
+      {
+        "id": "JS067",
+        "description": "Detect usage of untrusted input in document.getElementsByClassName()",
+        "pattern": "document\\.getElementsByClassName\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate class names before using them with document.getElementsByClassName() to prevent DOM-based XSS."
+      },
+      {
+        "id": "JS068",
+        "description": "Detect usage of untrusted input in document.getElementsByTagName()",
+        "pattern": "document\\.getElementsByTagName\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate tag names before using them with document.getElementsByTagName() to prevent DOM-based XSS."
+      },
+      {
+        "id": "JS069",
+        "description": "Detect usage of untrusted input in document.querySelector()",
+        "pattern": "document\\.querySelector\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate selectors before using them with document.querySelector() to prevent DOM-based XSS."
+      },
+      {
+        "id": "JS070",
+        "description": "Detect usage of untrusted input in document.querySelectorAll()",
+        "pattern": "document\\.querySelectorAll\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate selectors before using them with document.querySelectorAll() to prevent DOM-based XSS."
+      },
+      {
+        "id": "JS071",
+        "description": "Detect usage of untrusted input in JSON.stringify()",
+        "pattern": "JSON\\.stringify\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to JSON.stringify() is sanitized to prevent data leakage."
+      },
+      {
+        "id": "JS072",
+        "description": "Detect lack of input validation in file uploads",
+        "pattern": "input\\s*type=['\"]file['\"]",
+        "severity": "high",
+        "recommendation": "Validate and sanitize file uploads to prevent malicious files from being uploaded."
+      },
+      {
+        "id": "JS073",
+        "description": "Detect usage of untrusted input in setAttribute()",
+        "pattern": "\\.setAttribute\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate and sanitize attribute values before using setAttribute() to prevent XSS."
+      },
+      {
+        "id": "JS074",
+        "description": "Detect usage of untrusted input in element.innerHTML",
+        "pattern": "\\.innerHTML\\s*=",
+        "severity": "high",
+        "recommendation": "Avoid using innerHTML with untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS075",
+        "description": "Detect usage of untrusted input in element.outerHTML",
+        "pattern": "\\.outerHTML\\s*=",
+        "severity": "high",
+        "recommendation": "Avoid using outerHTML with untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS076",
+        "description": "Detect usage of untrusted input in element.innerText",
+        "pattern": "\\.innerText\\s*=",
+        "severity": "medium",
+        "recommendation": "Use textContent instead of innerText for better security and performance."
+      },
+      {
+        "id": "JS077",
+        "description": "Detect usage of untrusted input in element.insertAdjacentHTML",
+        "pattern": "insertAdjacentHTML\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using insertAdjacentHTML with untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS078",
+        "description": "Detect usage of untrusted input in element.insertAdjacentText",
+        "pattern": "insertAdjacentText\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure text passed to insertAdjacentText() is sanitized to prevent XSS."
+      },
+      {
+        "id": "JS079",
+        "description": "Detect usage of untrusted input in element.outerText",
+        "pattern": "\\.outerText\\s*=",
+        "severity": "medium",
+        "recommendation": "Use textContent instead of outerText for better security and performance."
+      },
+      {
+        "id": "JS080",
+        "description": "Detect usage of untrusted input in innerHTML within template literals",
+        "pattern": "\\.innerHTML\\s*=\\s*`.*`",
+        "severity": "high",
+        "recommendation": "Avoid using innerHTML with template literals containing untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS081",
+        "description": "Detect usage of untrusted input in outerHTML within template literals",
+        "pattern": "\\.outerHTML\\s*=\\s*`.*`",
+        "severity": "high",
+        "recommendation": "Avoid using outerHTML with template literals containing untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS082",
+        "description": "Detect usage of untrusted input in setAttribute within template literals",
+        "pattern": "\\.setAttribute\\s*\\(.*`.*`",
+        "severity": "high",
+        "recommendation": "Validate and sanitize attribute values before using setAttribute with template literals to prevent XSS."
+      },
+      {
+        "id": "JS083",
+        "description": "Detect insecure usage of window.localStorage.getItem()",
+        "pattern": "window\\.localStorage\\.getItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS084",
+        "description": "Detect insecure usage of window.localStorage.setItem()",
+        "pattern": "window\\.localStorage\\.setItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS085",
+        "description": "Detect insecure usage of window.localStorage.removeItem()",
+        "pattern": "window\\.localStorage\\.removeItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS086",
+        "description": "Detect insecure usage of window.sessionStorage.getItem()",
+        "pattern": "window\\.sessionStorage\\.getItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS087",
+        "description": "Detect insecure usage of window.sessionStorage.setItem()",
+        "pattern": "window\\.sessionStorage\\.setItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS088",
+        "description": "Detect insecure usage of window.sessionStorage.removeItem()",
+        "pattern": "window\\.sessionStorage\\.removeItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS089",
+        "description": "Detect insecure usage of window.localStorage.clear()",
+        "pattern": "window\\.localStorage\\.clear\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS090",
+        "description": "Detect insecure usage of window.sessionStorage.clear()",
+        "pattern": "window\\.sessionStorage\\.clear\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS091",
+        "description": "Detect usage of untrusted input in window.location.search",
+        "pattern": "window\\.location\\.search",
+        "severity": "high",
+        "recommendation": "Validate and sanitize query parameters before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS092",
+        "description": "Detect lack of CSRF token in AJAX requests",
+        "pattern": "\\$.ajax\\s*\\(\\s*\\{[^}]*\\}",
+        "severity": "high",
+        "recommendation": "Include a CSRF token in AJAX requests to prevent cross-site request forgery attacks."
+      },
+      {
+        "id": "JS093",
+        "description": "Detect lack of security headers in HTTP responses",
+        "pattern": "res\\.setHeader\\s*\\(",
+        "severity": "high",
+        "recommendation": "Implement security headers like Content-Security-Policy, X-Content-Type-Options, and X-Frame-Options to enhance security."
+      },
+      {
+        "id": "JS094",
+        "description": "Detect insecure usage of XMLHttpRequest without proper validation",
+        "pattern": "\\bnew\\s+XMLHttpRequest\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize all data sent via XMLHttpRequest to prevent injection attacks."
+      },
+      {
+        "id": "JS095",
+        "description": "Detect insecure usage of URL.searchParams",
+        "pattern": "URL\\.searchParams\\.append\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate and encode query parameters to prevent injection attacks."
+      },
+      {
+        "id": "JS096",
+        "description": "Detect usage of untrusted input in URL.hash",
+        "pattern": "URL\\.hash\\s*=",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate hash values before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS097",
+        "description": "Detect usage of untrusted input in URL.pathname",
+        "pattern": "URL\\.pathname\\s*=",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate pathname values before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS098",
+        "description": "Detect usage of untrusted input in URL.search",
+        "pattern": "URL\\.search\\s*=",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate search values before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS099",
+        "description": "Detect lack of validation for dynamically generated JSONP callbacks",
+        "pattern": "\\bjsonpCallback\\s*=",
+        "severity": "high",
+        "recommendation": "Validate JSONP callback names to prevent code injection vulnerabilities."
+      },
+      {
+        "id": "JS100",
+        "description": "Detect insecure use of postMessage without target origin",
+        "pattern": "postMessage\\s*\\(\\s*['\"]",
+        "severity": "high",
+        "recommendation": "Specify a target origin when using postMessage to ensure messages are sent to trusted origins only."
+      },
+      {
+        "id": "JS101",
+        "description": "Detect insecure use of postMessage without data validation",
+        "pattern": "postMessage\\s*\\(\\s*\\w+\\s*,\\s*['\"]",
+        "severity": "high",
+        "recommendation": "Validate and sanitize data before sending it via postMessage to prevent data leakage and code injection."
+      },
+      {
+        "id": "JS102",
+        "description": "Detect lack of integrity attribute in external script tags",
+        "pattern": "<script\\s+src=[^>]*>",
+        "severity": "medium",
+        "recommendation": "Use the integrity attribute in external script tags to ensure content has not been tampered with."
+      },
+      {
+        "id": "JS103",
+        "description": "Detect insecure use of eval within setTimeout",
+        "pattern": "setTimeout\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within setTimeout. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS104",
+        "description": "Detect insecure use of eval within setInterval",
+        "pattern": "setInterval\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within setInterval. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS105",
+        "description": "Detect insecure use of eval within setImmediate",
+        "pattern": "setImmediate\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within setImmediate. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS106",
+        "description": "Detect insecure use of eval within postMessage",
+        "pattern": "postMessage\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within postMessage. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS107",
+        "description": "Detect insecure use of eval within Function constructor",
+        "pattern": "new\\s+Function\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within Function constructor. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS108",
+        "description": "Detect insecure use of eval within innerHTML",
+        "pattern": "\\.innerHTML\\s*=\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within innerHTML. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS109",
+        "description": "Detect insecure use of eval within outerHTML",
+        "pattern": "\\.outerHTML\\s*=\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within outerHTML. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS110",
+        "description": "Detect insecure use of eval within setAttribute",
+        "pattern": "setAttribute\\s*\\(\\s*['\"]on",
+        "severity": "high",
+        "recommendation": "Avoid using eval within setAttribute. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS111",
+        "description": "Detect insecure use of eval within insertAdjacentHTML",
+        "pattern": "insertAdjacentHTML\\s*\\(\\s*['\"]before",
+        "severity": "high",
+        "recommendation": "Avoid using eval within insertAdjacentHTML. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS112",
+        "description": "Detect insecure use of eval within insertAdjacentText",
+        "pattern": "insertAdjacentText\\s*\\(\\s*['\"]before",
+        "severity": "high",
+        "recommendation": "Avoid using eval within insertAdjacentText. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS113",
+        "description": "Detect insecure use of eval within outerText",
+        "pattern": "\\.outerText\\s*=\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within outerText. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS114",
+        "description": "Detect usage of deprecated XMLHttpRequest open method",
+        "pattern": "XMLHttpRequest\\(\\).open\\(\\s*['\"]GET['\"]",
+        "severity": "medium",
+        "recommendation": "Use the Fetch API instead of XMLHttpRequest for better security and performance."
+      },
+      {
+        "id": "JS115",
+        "description": "Detect lack of crossorigin attribute in external script tags",
+        "pattern": "<script\\s+src=[^>]*>",
+        "severity": "medium",
+        "recommendation": "Use the crossorigin attribute in external script tags to enable cross-origin requests with credentials."
+      },
+      {
+        "id": "JS116",
+        "description": "Detect usage of untrusted input in location.href",
+        "pattern": "location\\.href\\s*=",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize URLs before assigning them to location.href to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS117",
+        "description": "Detect lack of X-Frame-Options header in HTTP responses",
+        "pattern": "res\\.setHeader\\s*\\(\\s*['\"]X-Frame-Options['\"]",
+        "severity": "high",
+        "recommendation": "Implement the X-Frame-Options header to prevent clickjacking attacks."
+      },
+      {
+        "id": "JS118",
+        "description": "Detect lack of X-Content-Type-Options header in HTTP responses",
+        "pattern": "res\\.setHeader\\s*\\(\\s*['\"]X-Content-Type-Options['\"]",
+        "severity": "high",
+        "recommendation": "Implement the X-Content-Type-Options header to prevent MIME-type sniffing."
+      },
+      {
+        "id": "JS119",
+        "description": "Detect lack of X-XSS-Protection header in HTTP responses",
+        "pattern": "res\\.setHeader\\s*\\(\\s*['\"]X-XSS-Protection['\"]",
+        "severity": "high",
+        "recommendation": "Implement the X-XSS-Protection header to enable XSS filtering."
+      },
+      {
+        "id": "JS120",
+        "description": "Detect insecure usage of document.cookie without secure flag",
+        "pattern": "document\\.cookie\\s*=",
+        "severity": "high",
+        "recommendation": "Set the secure flag on cookies to ensure they are only sent over HTTPS."
+      },
+      {
+        "id": "JS121",
+        "description": "Detect usage of untrusted input in location.pathname",
+        "pattern": "location\\.pathname\\s*=",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize pathnames before assigning them to location.pathname to prevent injection attacks."
+      },
+      {
+        "id": "JS122",
+        "description": "Detect lack of HSTS header in HTTP responses",
+        "pattern": "Strict-Transport-Security",
+        "severity": "high",
+        "recommendation": "Implement the HTTP Strict Transport Security (HSTS) header to enforce HTTPS connections."
+      },
+      {
+        "id": "JS123",
+        "description": "Detect insecure usage of navigator.geolocation.getCurrentPosition()",
+        "pattern": "navigator\\.geolocation\\.getCurrentPosition\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper permission handling and user consent before using geolocation data."
+      },
+      {
+        "id": "JS124",
+        "description": "Detect insecure usage of navigator.geolocation.watchPosition()",
+        "pattern": "navigator\\.geolocation\\.watchPosition\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper permission handling and user consent before using geolocation data."
+      },
+      {
+        "id": "JS125",
+        "description": "Detect usage of untrusted input in URL hash",
+        "pattern": "URL\\.hash\\s*=",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate hash values before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS126",
+        "description": "Detect insecure usage of WebSocket without validation",
+        "pattern": "\\bnew\\s+WebSocket\\s*\\(",
+        "severity": "high",
+        "recommendation": "Use secure WebSocket connections (wss://) and validate all input and output data."
+      },
+      {
+        "id": "JS127",
+        "description": "Detect lack of CSRF token in forms",
+        "pattern": "<form\\s+[^>]*>",
+        "severity": "high",
+        "recommendation": "Include a CSRF token in forms to prevent cross-site request forgery attacks."
+      },
+      {
+        "id": "JS128",
+        "description": "Detect lack of input validation in URL parameters",
+        "pattern": "location\\.search",
+        "severity": "high",
+        "recommendation": "Validate and sanitize URL parameters to prevent injection attacks."
+      },
+      {
+        "id": "JS129",
+        "description": "Detect lack of validation for dynamically generated image URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]img['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic image URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS130",
+        "description": "Detect lack of validation for dynamically generated video URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]video['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic video URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS131",
+        "description": "Detect lack of validation for dynamically generated audio URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]audio['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic audio URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS132",
+        "description": "Detect lack of validation for dynamically generated anchor URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]a['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic anchor URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS133",
+        "description": "Detect lack of validation for dynamically generated link URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]link['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic link URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS134",
+        "description": "Detect lack of validation for dynamically generated source URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]source['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic source URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS135",
+        "description": "Detect usage of untrusted input in URL pathname",
+        "pattern": "URL\\.pathname\\s*=",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate pathname values before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS136",
+        "description": "Detect insecure use of XMLHttpRequest with unsanitized URL",
+        "pattern": "XMLHttpRequest\\(\\)\\.open\\s*\\(\\s*['\"]GET['\"]",
+        "severity": "medium",
+        "recommendation": "Ensure all URLs used in XMLHttpRequest are sanitized to prevent injection attacks."
+      },
+      {
+        "id": "JS137",
+        "description": "Detect usage of untrusted input in URL search",
+        "pattern": "URL\\.search\\s*=",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate search values before using them to prevent injection attacks."
+      },
+      {
+        "id": "JS138",
+        "description": "Detect insecure usage of document.cookie without HttpOnly flag",
+        "pattern": "document\\.cookie\\s*=",
+        "severity": "high",
+        "recommendation": "Set the HttpOnly flag on cookies to prevent access from JavaScript and mitigate XSS attacks."
+      },
+      {
+        "id": "JS139",
+        "description": "Detect usage of untrusted input in innerHTML with template literals",
+        "pattern": "\\.innerHTML\\s*=\\s*`.*\\$\\{",
+        "severity": "high",
+        "recommendation": "Avoid using innerHTML with template literals containing untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS140",
+        "description": "Detect usage of untrusted input in outerHTML with template literals",
+        "pattern": "\\.outerHTML\\s*=\\s*`.*\\$\\{",
+        "severity": "high",
+        "recommendation": "Avoid using outerHTML with template literals containing untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS141",
+        "description": "Detect insecure usage of XMLHttpRequest with unsanitized POST data",
+        "pattern": "XMLHttpRequest\\(\\)\\.send\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all POST data before sending it via XMLHttpRequest to prevent injection attacks."
+      },
+      {
+        "id": "JS142",
+        "description": "Detect usage of untrusted input in URL hash with template literals",
+        "pattern": "URL\\.hash\\s*=\\s*`.*\\$\\{",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate hash values before using them with template literals to prevent injection attacks."
+      },
+      {
+        "id": "JS143",
+        "description": "Detect insecure usage of WebSocket without proper validation",
+        "pattern": "new\\s+WebSocket\\s*\\(",
+        "severity": "high",
+        "recommendation": "Use secure WebSocket connections (wss://) and validate all input and output data."
+      },
+      {
+        "id": "JS144",
+        "description": "Detect lack of input validation in dynamically generated form actions",
+        "pattern": "<form\\s+[^>]*action",
+        "severity": "high",
+        "recommendation": "Validate and sanitize form action URLs to prevent injection attacks."
+      },
+      {
+        "id": "JS145",
+        "description": "Detect usage of untrusted input in document.domain",
+        "pattern": "document\\.domain\\s*=",
+        "severity": "medium",
+        "recommendation": "Avoid using document.domain to relax same-origin policy. Use secure cross-origin communication techniques."
+      },
+      {
+        "id": "JS146",
+        "description": "Detect usage of untrusted input in window.open",
+        "pattern": "window\\.open\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate and sanitize URLs before passing them to window.open to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS147",
+        "description": "Detect insecure usage of fetch without proper validation",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure all URLs used in fetch are sanitized and validate responses to prevent injection attacks."
+      },
+      {
+        "id": "JS148",
+        "description": "Detect insecure usage of fetch with unsanitized request body",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all request body data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS149",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS150",
+        "description": "Detect lack of validation for dynamically generated script URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]script['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic script URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS151",
+        "description": "Detect lack of validation for dynamically generated iframe URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]iframe['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic iframe URLs to prevent XSS and clickjacking attacks."
+      },
+      {
+        "id": "JS152",
+        "description": "Detect insecure usage of fetch with unsanitized headers",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*headers",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all header data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS153",
+        "description": "Detect lack of validation for dynamically generated object URLs",
+        "pattern": "URL\\.createObjectURL\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate data before creating object URLs to prevent potential misuse."
+      },
+      {
+        "id": "JS154",
+        "description": "Detect insecure usage of fetch without proper CORS configuration",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper CORS configuration to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS155",
+        "description": "Detect insecure usage of fetch without credentials",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests include credentials if needed and validate responses."
+      },
+      {
+        "id": "JS156",
+        "description": "Detect insecure usage of fetch with GET method",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*method\\s*:\\s*['\"]GET['\"]",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests with GET method do not include sensitive data in the URL."
+      },
+      {
+        "id": "JS157",
+        "description": "Detect insecure usage of fetch with POST method",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*method\\s*:\\s*['\"]POST['\"]",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests with POST method validate and sanitize all data before sending it."
+      },
+      {
+        "id": "JS158",
+        "description": "Detect insecure usage of fetch with PUT method",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*method\\s*:\\s*['\"]PUT['\"]",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests with PUT method validate and sanitize all data before sending it."
+      },
+      {
+        "id": "JS159",
+        "description": "Detect insecure usage of fetch with DELETE method",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*method\\s*:\\s*['\"]DELETE['\"]",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests with DELETE method validate and sanitize all data before sending it."
+      },
+      {
+        "id": "JS160",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS161",
+        "description": "Detect insecure usage of fetch with unsanitized URL parameters",
+        "pattern": "fetch\\s*\\([^\\[]*\\[",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate URL parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS162",
+        "description": "Detect lack of validation for dynamically generated URLs",
+        "pattern": "URL\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamically generated URLs to prevent XSS and open redirect vulnerabilities."
+      },
+      {
+        "id": "JS163",
+        "description": "Detect insecure usage of fetch without CSRF token",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Include a CSRF token in fetch requests to prevent cross-site request forgery attacks."
+      },
+      {
+        "id": "JS164",
+        "description": "Detect insecure usage of XMLHttpRequest without CSRF token",
+        "pattern": "XMLHttpRequest\\(\\)\\.send\\s*\\(",
+        "severity": "high",
+        "recommendation": "Include a CSRF token in XMLHttpRequest requests to prevent cross-site request forgery attacks."
+      },
+      {
+        "id": "JS165",
+        "description": "Detect insecure usage of fetch without proper headers",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests include proper headers to prevent unauthorized access."
+      },
+      {
+        "id": "JS166",
+        "description": "Detect insecure usage of fetch with unsanitized data",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all data sent via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS167",
+        "description": "Detect lack of input validation in dynamically generated URLs",
+        "pattern": "URL\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamically generated URLs to prevent XSS and open redirect vulnerabilities."
+      },
+      {
+        "id": "JS168",
+        "description": "Detect insecure usage of fetch without proper authentication",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper authentication to prevent unauthorized access."
+      },
+      {
+        "id": "JS169",
+        "description": "Detect insecure usage of fetch without proper CORS policy",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include a proper CORS policy to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS170",
+        "description": "Detect insecure usage of fetch with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS171",
+        "description": "Detect insecure usage of fetch with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS172",
+        "description": "Detect insecure usage of fetch with unsanitized multipart data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+Blob",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all multipart data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS173",
+        "description": "Detect insecure usage of fetch with unsanitized URLSearchParams",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+URLSearchParams",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all URLSearchParams before sending them via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS174",
+        "description": "Detect insecure usage of fetch without proper response handling",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch responses are properly handled and validated to prevent injection attacks."
+      },
+      {
+        "id": "JS175",
+        "description": "Detect lack of integrity attribute in external link tags",
+        "pattern": "<link\\s+rel=['\"]stylesheet['\"]",
+        "severity": "medium",
+        "recommendation": "Use the integrity attribute in external link tags to ensure content has not been tampered with."
+      },
+      {
+        "id": "JS176",
+        "description": "Detect insecure usage of fetch with unsanitized URL parameters",
+        "pattern": "fetch\\s*\\([^\\[]*\\[",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate URL parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS177",
+        "description": "Detect lack of validation for dynamically generated object URLs",
+        "pattern": "URL\\.createObjectURL\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Validate data before creating object URLs to prevent potential misuse."
+      },
+      {
+        "id": "JS178",
+        "description": "Detect insecure usage of fetch without proper headers",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests include proper headers to prevent unauthorized access."
+      },
+      {
+        "id": "JS179",
+        "description": "Detect insecure usage of fetch with unsanitized data",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all data sent via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS180",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS181",
+        "description": "Detect insecure usage of fetch without proper authentication",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper authentication to prevent unauthorized access."
+      },
+      {
+        "id": "JS182",
+        "description": "Detect insecure usage of fetch without proper CORS policy",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include a proper CORS policy to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS183",
+        "description": "Detect insecure usage of fetch with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS184",
+        "description": "Detect insecure usage of fetch with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS185",
+        "description": "Detect insecure usage of fetch with unsanitized multipart data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+Blob",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all multipart data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS186",
+        "description": "Detect insecure usage of fetch with unsanitized URLSearchParams",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+URLSearchParams",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all URLSearchParams before sending them via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS187",
+        "description": "Detect insecure usage of fetch without proper response handling",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch responses are properly handled and validated to prevent injection attacks."
+      },
+      {
+        "id": "JS188",
+        "description": "Detect insecure usage of fetch without proper validation",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure all URLs used in fetch are sanitized and validate responses to prevent injection attacks."
+      },
+      {
+        "id": "JS189",
+        "description": "Detect insecure usage of fetch with unsanitized headers",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*headers",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all header data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS190",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS191",
+        "description": "Detect insecure usage of fetch without proper authentication",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper authentication to prevent unauthorized access."
+      },
+      {
+        "id": "JS192",
+        "description": "Detect insecure usage of fetch without proper CORS policy",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include a proper CORS policy to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS193",
+        "description": "Detect insecure usage of fetch with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS194",
+        "description": "Detect insecure usage of fetch with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS195",
+        "description": "Detect insecure usage of fetch with unsanitized multipart data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+Blob",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all multipart data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS196",
+        "description": "Detect insecure usage of fetch with unsanitized URLSearchParams",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+URLSearchParams",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all URLSearchParams before sending them via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS197",
+        "description": "Detect insecure usage of fetch without proper response handling",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch responses are properly handled and validated to prevent injection attacks."
+      },
+      {
+        "id": "JS198",
+        "description": "Detect lack of validation for dynamically generated script URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]script['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic script URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS199",
+        "description": "Detect lack of validation for dynamically generated iframe URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]iframe['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic iframe URLs to prevent XSS and clickjacking attacks."
+      },
+      {
+        "id": "JS200",
+        "description": "Detect insecure usage of fetch with unsanitized headers",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*headers",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all header data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS201",
+        "description": "Detect lack of validation for dynamically generated URLs",
+        "pattern": "URL\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamically generated URLs to prevent XSS and open redirect vulnerabilities."
+      },
+      {
+        "id": "JS202",
+        "description": "Detect insecure usage of fetch with unsanitized data",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all data sent via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS203",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS204",
+        "description": "Detect insecure usage of fetch without proper authentication",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper authentication to prevent unauthorized access."
+      },
+      {
+        "id": "JS205",
+        "description": "Detect insecure usage of fetch without proper CORS policy",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include a proper CORS policy to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS206",
+        "description": "Detect insecure usage of fetch with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS207",
+        "description": "Detect insecure usage of fetch with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS208",
+        "description": "Detect insecure usage of fetch with unsanitized multipart data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+Blob",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all multipart data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS209",
+        "description": "Detect insecure usage of fetch with unsanitized URLSearchParams",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+URLSearchParams",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all URLSearchParams before sending them via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS210",
+        "description": "Detect insecure usage of fetch without proper response handling",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch responses are properly handled and validated to prevent injection attacks."
+      },
+      {
+        "id": "JS211",
+        "description": "Detect lack of validation for dynamically generated script URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]script['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic script URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS212",
+        "description": "Detect lack of validation for dynamically generated iframe URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]iframe['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic iframe URLs to prevent XSS and clickjacking attacks."
+      },
+      {
+        "id": "JS213",
+        "description": "Detect insecure usage of fetch with unsanitized headers",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*headers",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all header data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS214",
+        "description": "Detect lack of validation for dynamically generated URLs",
+        "pattern": "URL\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamically generated URLs to prevent XSS and open redirect vulnerabilities."
+      },
+      {
+        "id": "JS215",
+        "description": "Detect insecure usage of fetch with unsanitized data",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all data sent via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS216",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS217",
+        "description": "Detect insecure usage of fetch without proper authentication",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper authentication to prevent unauthorized access."
+      },
+      {
+        "id": "JS218",
+        "description": "Detect insecure usage of fetch without proper CORS policy",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include a proper CORS policy to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS219",
+        "description": "Detect insecure usage of fetch with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS220",
+        "description": "Detect insecure usage of fetch with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS221",
+        "description": "Detect insecure usage of fetch with unsanitized multipart data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+Blob",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all multipart data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS222",
+        "description": "Detect insecure usage of fetch with unsanitized URLSearchParams",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+URLSearchParams",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all URLSearchParams before sending them via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS223",
+        "description": "Detect insecure usage of fetch without proper response handling",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch responses are properly handled and validated to prevent injection attacks."
+      },
+      {
+        "id": "JS224",
+        "description": "Detect lack of validation for dynamically generated script URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]script['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic script URLs to prevent XSS attacks."
+      },
+      {
+        "id": "JS225",
+        "description": "Detect lack of validation for dynamically generated iframe URLs",
+        "pattern": "document\\.createElement\\s*\\(['\"]iframe['\"]\\)",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamic iframe URLs to prevent XSS and clickjacking attacks."
+      },
+      {
+        "id": "JS226",
+        "description": "Detect insecure usage of fetch with unsanitized headers",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*headers",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all header data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS227",
+        "description": "Detect lack of validation for dynamically generated URLs",
+        "pattern": "URL\\s*\\(",
+        "severity": "high",
+        "recommendation": "Validate and sanitize all dynamically generated URLs to prevent XSS and open redirect vulnerabilities."
+      },
+      {
+        "id": "JS228",
+        "description": "Detect insecure usage of fetch with unsanitized data",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all data sent via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS229",
+        "description": "Detect insecure usage of fetch with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS230",
+        "description": "Detect insecure usage of fetch without proper authentication",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include proper authentication to prevent unauthorized access."
+      },
+      {
+        "id": "JS231",
+        "description": "Detect insecure usage of fetch without proper CORS policy",
+        "pattern": "fetch\\s*\\(",
+        "severity": "high",
+        "recommendation": "Ensure fetch requests include a proper CORS policy to prevent unauthorized cross-origin requests."
+      },
+      {
+        "id": "JS232",
+        "description": "Detect insecure usage of fetch with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS233",
+        "description": "Detect insecure usage of fetch with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS234",
+        "description": "Detect insecure usage of fetch with unsanitized multipart data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+Blob",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all multipart data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS235",
+        "description": "Detect usage of `document.write` within loops",
+        "pattern": "for\\s*\\(.*\\)\\s*{.*document\\.write",
+        "severity": "medium",
+        "recommendation": "Avoid using document.write within loops as it can lead to performance issues and potential vulnerabilities."
+      },
+      {
+        "id": "JS236",
+        "description": "Detect insecure use of `Element.insertAdjacentHTML`",
+        "pattern": "\\.insertAdjacentHTML\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using insertAdjacentHTML with untrusted input. Use textContent or safer methods."
+      },
+      {
+        "id": "JS237",
+        "description": "Detect assignment to `location.href` with user-controlled input",
+        "pattern": "location\\.href\\s*=\\s*userInput",
+        "severity": "high",
+        "recommendation": "Sanitize and validate user input before assigning it to location.href to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS238",
+        "description": "Detect usage of `localStorage` for storing sensitive data",
+        "pattern": "localStorage\\.setItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid storing sensitive data in localStorage. Use secure storage solutions."
+      },
+      {
+        "id": "JS239",
+        "description": "Detect usage of `sessionStorage` for storing sensitive data",
+        "pattern": "sessionStorage\\.setItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid storing sensitive data in sessionStorage. Use secure storage solutions."
+      },
+      {
+        "id": "JS240",
+        "description": "Detect insecure use of `document.cookie` without Secure flag",
+        "pattern": "document\\.cookie\\s*=\\s*['\"][^;]*['\"]",
+        "severity": "high",
+        "recommendation": "Set the Secure flag on cookies to ensure they are only sent over HTTPS."
+      },
+      {
+        "id": "JS241",
+        "description": "Detect assignment to `location.replace` with user-controlled input",
+        "pattern": "location\\.replace\\s*\\(",
+        "severity": "high",
+        "recommendation": "Sanitize and validate user input before using it with location.replace to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS242",
+        "description": "Detect usage of `window.confirm`",
+        "pattern": "window\\.confirm\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid using window.confirm for critical actions. Use custom dialog boxes with proper validation."
+      },
+      {
+        "id": "JS243",
+        "description": "Detect usage of `window.prompt`",
+        "pattern": "window\\.prompt\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid using window.prompt for sensitive input. Use custom input forms with proper validation."
+      },
+      {
+        "id": "JS244",
+        "description": "Detect assignment to `document.domain`",
+        "pattern": "document\\.domain\\s*=",
+        "severity": "medium",
+        "recommendation": "Avoid using document.domain to relax same-origin policy. Use secure cross-origin communication techniques."
+      },
+      {
+        "id": "JS245",
+        "description": "Detect usage of `eval` within `setTimeout`",
+        "pattern": "setTimeout\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within setTimeout. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS246",
+        "description": "Detect usage of `eval` within `setInterval`",
+        "pattern": "setInterval\\s*\\(\\s*['\"]eval",
+        "severity": "high",
+        "recommendation": "Avoid using eval within setInterval. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS247",
+        "description": "Detect insecure usage of `window.open` with user-controlled URLs",
+        "pattern": "window\\.open\\s*\\(userInput",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate URLs before passing them to window.open to prevent open redirect vulnerabilities."
+      },
+      {
+        "id": "JS248",
+        "description": "Detect insecure usage of `document.write` within event handlers",
+        "pattern": "on\\w+\\s*=\\s*\"[^\"]*document\\.write",
+        "severity": "high",
+        "recommendation": "Avoid using document.write within event handlers. Use DOM manipulation methods instead."
+      },
+      {
+        "id": "JS249",
+        "description": "Detect usage of `unescape`",
+        "pattern": "unescape\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid using unescape as it is deprecated. Use decodeURI or decodeURIComponent instead."
+      },
+      {
+        "id": "JS250",
+        "description": "Detect usage of `escape`",
+        "pattern": "escape\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid using escape as it is deprecated. Use encodeURI or encodeURIComponent instead."
+      },
+      {
+        "id": "JS251",
+        "description": "Detect usage of `document.write` with untrusted input",
+        "pattern": "document\\.write\\s*\\(userInput",
+        "severity": "high",
+        "recommendation": "Avoid using document.write with untrusted input. Use safer DOM manipulation methods."
+      },
+      {
+        "id": "JS252",
+        "description": "Detect assignment to `document.body.innerHTML`",
+        "pattern": "document\\.body\\.innerHTML\\s*=",
+        "severity": "high",
+        "recommendation": "Avoid assigning untrusted input to innerHTML. Use textContent or DOM manipulation methods."
+      },
+      {
+        "id": "JS253",
+        "description": "Detect usage of `innerHTML` with template literals",
+        "pattern": "\\.innerHTML\\s*=\\s*`.*\\$\\{",
+        "severity": "high",
+        "recommendation": "Avoid using innerHTML with template literals containing untrusted input. Use safer methods like textContent."
+      },
+      {
+        "id": "JS254",
+        "description": "Detect insecure use of `Function` constructor",
+        "pattern": "new\\s+Function\\s*\\(",
+        "severity": "high",
+        "recommendation": "Avoid using the Function constructor as it can lead to code injection vulnerabilities. Use safer alternatives."
+      },
+      {
+        "id": "JS255",
+        "description": "Detect usage of `innerText` instead of `textContent`",
+        "pattern": "\\.innerText\\s*=",
+        "severity": "low",
+        "recommendation": "Use textContent instead of innerText for better security and performance."
+      },
+      {
+        "id": "JS256",
+        "description": "Detect lack of CSP header",
+        "pattern": "Content-Security-Policy",
+        "severity": "high",
+        "recommendation": "Implement a strong Content Security Policy (CSP) to mitigate XSS and other injection attacks."
+      },
+      {
+        "id": "JS257",
+        "description": "Detect usage of `with` statement",
+        "pattern": "\\bwith\\b",
+        "severity": "low",
+        "recommendation": "Avoid using the 'with' statement as it can lead to unpredictable behavior and make code harder to debug."
+      },
+      {
+        "id": "JS258",
+        "description": "Detect lack of validation for URL parameters",
+        "pattern": "location\\.search",
+        "severity": "high",
+        "recommendation": "Validate and sanitize URL parameters to prevent injection attacks."
+      },
+      {
+        "id": "JS259",
+        "description": "Detect usage of `window.postMessage` without target origin",
+        "pattern": "window\\.postMessage\\s*\\(.*,'\\s*\\*",
+        "severity": "high",
+        "recommendation": "Specify a target origin when using window.postMessage to ensure messages are sent to trusted origins only."
+      },
+      {
+        "id": "JS260",
+        "description": "Detect lack of HTTPS for AJAX requests",
+        "pattern": "\\$.ajax\\s*\\(.*url\\s*:\\s*['\"]http:",
+        "severity": "high",
+        "recommendation": "Use HTTPS for AJAX requests to ensure secure data transmission."
+      },
+      {
+        "id": "JS261",
+        "description": "Detect usage of deprecated `alert`",
+        "pattern": "alert\\s*\\(",
+        "severity": "low",
+        "recommendation": "Avoid using alert for displaying messages. Use custom dialog boxes for better control and user experience."
+      },
+      {
+        "id": "JS262",
+        "description": "Detect insecure use of `WebSocket` without validation",
+        "pattern": "new\\s+WebSocket\\s*\\(",
+        "severity": "high",
+        "recommendation": "Use secure WebSocket connections (wss://) and validate all input and output data."
+      },
+      {
+        "id": "JS263",
+        "description": "Detect insecure usage of `innerHTML` for setting SVG content",
+        "pattern": "<svg[^>]*>(.*?)<\\/svg>",
+        "severity": "high",
+        "recommendation": "Avoid using innerHTML for setting SVG content. Use DOM manipulation methods to create and append SVG elements."
+      },
+      {
+        "id": "JS264",
+        "description": "Detect usage of `crypto.randomBytes` without error handling",
+        "pattern": "crypto\\.randomBytes\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper error handling when using crypto.randomBytes to generate secure random bytes."
+      },
+      {
+        "id": "JS265",
+        "description": "Detect usage of `setImmediate` with untrusted input",
+        "pattern": "setImmediate\\s*\\(userInput",
+        "severity": "medium",
+        "recommendation": "Avoid using setImmediate with untrusted input. Use function expressions or declarations instead."
+      },
+      {
+        "id": "JS266",
+        "description": "Detect insecure usage of `crypto.subtle.digest`",
+        "pattern": "crypto\\.subtle\\.digest\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to crypto.subtle.digest is sanitized to prevent security vulnerabilities."
+      },
+      {
+        "id": "JS267",
+        "description": "Detect insecure usage of `crypto.subtle.generateKey`",
+        "pattern": "crypto\\.subtle\\.generateKey\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of generated keys when using crypto.subtle.generateKey."
+      },
+      {
+        "id": "JS268",
+        "description": "Detect insecure usage of `crypto.subtle.importKey`",
+        "pattern": "crypto\\.subtle\\.importKey\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of imported keys when using crypto.subtle.importKey."
+      },
+      {
+        "id": "JS269",
+        "description": "Detect insecure usage of `crypto.subtle.exportKey`",
+        "pattern": "crypto\\.subtle\\.exportKey\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of exported keys when using crypto.subtle.exportKey."
+      },
+      {
+        "id": "JS270",
+        "description": "Detect insecure usage of `crypto.subtle.encrypt`",
+        "pattern": "crypto\\.subtle\\.encrypt\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to crypto.subtle.encrypt is sanitized to prevent security vulnerabilities."
+      },
+      {
+        "id": "JS271",
+        "description": "Detect insecure usage of `crypto.subtle.decrypt`",
+        "pattern": "crypto\\.subtle\\.decrypt\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to crypto.subtle.decrypt is sanitized to prevent security vulnerabilities."
+      },
+      {
+        "id": "JS272",
+        "description": "Detect insecure usage of `crypto.subtle.sign`",
+        "pattern": "crypto\\.subtle\\.sign\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to crypto.subtle.sign is sanitized to prevent security vulnerabilities."
+      },
+      {
+        "id": "JS273",
+        "description": "Detect insecure usage of `crypto.subtle.verify`",
+        "pattern": "crypto\\.subtle\\.verify\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure data passed to crypto.subtle.verify is sanitized to prevent security vulnerabilities."
+      },
+      {
+        "id": "JS274",
+        "description": "Detect usage of `atob` with untrusted input",
+        "pattern": "atob\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using atob with untrusted input. Use safer alternatives or validate input before decoding."
+      },
+      {
+        "id": "JS275",
+        "description": "Detect usage of `btoa` with untrusted input",
+        "pattern": "btoa\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using btoa with untrusted input. Use safer alternatives or validate input before encoding."
+      },
+      {
+        "id": "JS276",
+        "description": "Detect insecure usage of `crypto.subtle.deriveKey`",
+        "pattern": "crypto\\.subtle\\.deriveKey\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of derived keys when using crypto.subtle.deriveKey."
+      },
+      {
+        "id": "JS277",
+        "description": "Detect insecure usage of `crypto.subtle.deriveBits`",
+        "pattern": "crypto\\.subtle\\.deriveBits\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of derived bits when using crypto.subtle.deriveBits."
+      },
+      {
+        "id": "JS278",
+        "description": "Detect insecure usage of `crypto.subtle.wrapKey`",
+        "pattern": "crypto\\.subtle\\.wrapKey\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of wrapped keys when using crypto.subtle.wrapKey."
+      },
+      {
+        "id": "JS279",
+        "description": "Detect insecure usage of `crypto.subtle.unwrapKey`",
+        "pattern": "crypto\\.subtle\\.unwrapKey\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure proper handling of unwrapped keys when using crypto.subtle.unwrapKey."
+      },
+      {
+        "id": "JS280",
+        "description": "Detect insecure usage of `localStorage.getItem`",
+        "pattern": "localStorage\\.getItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS281",
+        "description": "Detect insecure usage of `sessionStorage.getItem`",
+        "pattern": "sessionStorage\\.getItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS282",
+        "description": "Detect insecure usage of `localStorage.removeItem`",
+        "pattern": "localStorage\\.removeItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS283",
+        "description": "Detect insecure usage of `sessionStorage.removeItem`",
+        "pattern": "sessionStorage\\.removeItem\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS284",
+        "description": "Detect insecure usage of `localStorage.clear`",
+        "pattern": "localStorage\\.clear\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using localStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS285",
+        "description": "Detect insecure usage of `sessionStorage.clear`",
+        "pattern": "sessionStorage\\.clear\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Avoid using sessionStorage for sensitive data. Use secure storage mechanisms."
+      },
+      {
+        "id": "JS286",
+        "description": "Detect insecure usage of `fetch` without credentials",
+        "pattern": "fetch\\s*\\(",
+        "severity": "medium",
+        "recommendation": "Ensure fetch requests include credentials if needed and validate responses."
+      },
+      {
+        "id": "JS287",
+        "description": "Detect insecure usage of `fetch` with unsanitized query parameters",
+        "pattern": "fetch\\s*\\([^?]*\\?[^)]+",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate query parameters before using them with fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS288",
+        "description": "Detect insecure usage of `fetch` with unsanitized JSON data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*JSON",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all JSON data before sending it via fetch to prevent injection attacks."
+      },
+      {
+        "id": "JS289",
+        "description": "Detect insecure usage of `fetch` with unsanitized form data",
+        "pattern": "fetch\\s*\\([^,]*,\\s*\\{[^}]*body\\s*:\\s*new\\s+FormData",
+        "severity": "medium",
+        "recommendation": "Sanitize and validate all form data before sending it via fetch to prevent injection attacks."
+      }
+    ]
+  }
+  

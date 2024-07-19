@@ -1,0 +1,48 @@
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+  }
+
+  
+  section {
+    padding: 80px 20px 20px; /* Adjusted padding to prevent overlap with fixed header */
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 1em;
+  }
+  
+  table th, table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+    word-break: break-word; /* Ensure long content wraps */
+  }
+  
+  table th {
+    background-color: #333;
+    color: #ffffff;
+  }
+  
+  table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+  }
+  
+  table tbody tr:nth-of-type(odd) {
+    background-color: #ffffff;
+  }
+  
+  #analysisResult {
+    overflow-x: auto; /* Add horizontal scroll to the analysis result section */
+  }
+  
+  
