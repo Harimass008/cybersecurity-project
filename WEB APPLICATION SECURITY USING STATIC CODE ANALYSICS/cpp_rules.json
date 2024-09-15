@@ -1,0 +1,552 @@
+{
+  "rules": [
+    {
+      "id": "R001",
+      "title": "Avoid Using memset to Delete Sensitive Data",
+      "description": "Detects instances where the memset function is used to clear sensitive data from memory, which might be optimized away by the compiler, leaving the sensitive data intact.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "memset",
+        "sensitive data",
+        "security",
+        "vulnerability",
+        "compiler optimization"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-14: Compiler Removal of Code to Clear Buffers",
+      "examples": {
+        "positive": [
+          {
+            "code": "secure_memset(buffer, 0, sizeof(buffer));",
+            "description": "Using a secure_memset function that is not optimized away by the compiler."
+          }
+        ],
+        "negative": [
+          {
+            "code": "memset(buffer, 0, sizeof(buffer));\nfree(buffer);",
+            "description": "Using memset to clear a buffer followed by memory deallocation, which may be optimized away by the compiler.",
+            "pattern": "memset\\(([^,]+),\\s*0,\\s*sizeof\\([^\\)]+\\)\\);\\s*free\\(\\1\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use a secure memory wiping function, such as explicit_bzero or memset_s, that is not optimized away by the compiler.",
+          "Ensure that any sensitive data is securely cleared from memory before deallocation."
+        ],
+        "examples": [
+          {
+            "code": "explicit_bzero(buffer, sizeof(buffer));\nfree(buffer);",
+            "description": "Using explicit_bzero to securely clear a buffer before deallocation."
+          }
+        ]
+      },
+      "rationale": "The use of memset to clear sensitive data is vulnerable to compiler optimizations, which can remove the memory clearing operation, leaving sensitive data in memory. Using a secure function ensures that the data is properly cleared and not accessible after deallocation."
+    },
+    {
+      "id": "R002",
+      "title": "Avoid Buffer Overflows with POSIX Functions",
+      "description": "Detects instances where POSIX functions are called with a buffer and a size argument that could lead to buffer overflows if the size exceeds the actual buffer size.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "POSIX",
+        "buffer overflow",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')",
+      "examples": {
+        "positive": [
+          {
+            "code": "snprintf(buffer, sizeof(buffer), \"%s\", user_input);",
+            "description": "The size argument correctly matches the buffer size, preventing overflow."
+          }
+        ],
+        "negative": [
+          {
+            "code": "snprintf(buffer, 1024, \"%s\", user_input);",
+            "description": "The size argument exceeds the actual size of the buffer, potentially causing a buffer overflow.",
+            "pattern": "snprintf\\(([^,]+),\\s*\\d+,"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that the size argument matches the actual size of the buffer when calling POSIX functions.",
+          "Use safer alternatives, such as bounded string functions, where possible.",
+          "Avoid hard-coding buffer sizes; instead, use dynamic or calculated sizes based on the buffer's actual allocation."
+        ],
+        "examples": [
+          {
+            "code": "snprintf(buffer, sizeof(buffer), \"%s\", user_input);",
+            "description": "Using sizeof(buffer) to correctly limit the size of the write operation."
+          }
+        ]
+      },
+      "rationale": "Calling POSIX functions with a size argument that exceeds the actual buffer size can lead to buffer overflows, causing unpredictable behavior, information disclosure, code execution vulnerabilities, and denial of service. Ensuring that size arguments match buffer sizes is crucial to prevent these security risks."
+    },
+    {
+      "id": "R003",
+      "title": "Prevent XXE (XML External Entity) Attacks",
+      "description": "Detects instances where XML parsers are configured in a way that makes them vulnerable to XML External Entity (XXE) attacks by allowing the usage of external entities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "XXE",
+        "XML",
+        "security",
+        "vulnerability",
+        "external entity"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-611: Improper Restriction of XML External Entity Reference",
+      "examples": {
+        "positive": [
+          {
+            "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);",
+            "description": "Disabling external entity processing to prevent XXE vulnerabilities."
+          }
+        ],
+        "negative": [
+          {
+            "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();",
+            "description": "Not disabling external entity processing, making the XML parser vulnerable to XXE attacks.",
+            "pattern": "DocumentBuilderFactory\\s+\\w+\\s*=\\s*DocumentBuilderFactory\\.newInstance\\(\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Disable external entity processing by setting appropriate features in the XML parser configuration.",
+          "Use a secure XML parser that is configured to prevent XXE attacks by default.",
+          "Validate and sanitize all XML input to ensure it does not contain malicious external entities."
+        ],
+        "examples": [
+          {
+            "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);",
+            "description": "Disabling the processing of external entities to secure the XML parser against XXE attacks."
+          }
+        ]
+      },
+      "rationale": "XML parsers that allow external entity processing without proper precautions are vulnerable to XXE attacks, which can lead to serious security issues such as sensitive data exposure, denial of service, and server-side request forgery (SSRF). Proper configuration and validation are essential to mitigate these risks."
+    },
+    {
+      "id": "R004",
+      "title": "Prevent TOCTOU (Time-Of-Check to Time-Of-Use) Vulnerabilities in File Access",
+      "description": "Detects instances where file operations are separated from their checks, creating a window of opportunity for race conditions and potential TOCTOU vulnerabilities.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "TOCTOU",
+        "race condition",
+        "file access",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-367: Time-of-Check Time-of-Use (TOCTOU) Race Condition",
+      "examples": {
+        "positive": [
+          {
+            "code": "with open(filepath, 'r') as file:\n    data = file.read()",
+            "description": "Performing file operations within a context that guarantees the file's state remains consistent between the check and the use."
+          }
+        ],
+        "negative": [
+          {
+            "code": "if os.path.exists(filepath):\n    with open(filepath, 'r') as file:\n        data = file.read()",
+            "description": "Checking for the file's existence before opening it, creating a window for a race condition where the file could be altered or removed between the check and the use.",
+            "pattern": "os\\.path\\.exists\\([^\\)]+\\)\\s*:\\s*with\\s*open\\([^\\)]+\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Combine the file check and access operations into a single, atomic operation wherever possible.",
+          "Use secure file handling techniques, such as using `os.open` with flags that ensure the atomicity of the operation.",
+          "Avoid relying on file state checks before performing file operations, as this can introduce race conditions."
+        ],
+        "examples": [
+          {
+            "code": "try:\n    with open(filepath, 'r') as file:\n        data = file.read()\nexcept FileNotFoundError:\n    handle_missing_file()",
+            "description": "Handling potential errors directly during file access, avoiding the need for separate existence checks."
+          }
+        ]
+      },
+      "rationale": "TOCTOU vulnerabilities occur when an application checks a file's state (such as existence or permissions) and then acts based on that state. If the file's state changes between the check and the use, race conditions can occur, leading to security vulnerabilities such as privilege escalation, arbitrary code execution, or denial of service. Ensuring atomic file operations or handling potential state changes directly during file access is crucial to prevent these vulnerabilities."
+    },
+    {
+      "id": "R005",
+      "title": "Ensure Robustness of Cipher Algorithms",
+      "description": "Detects instances where weak or outdated cipher algorithms are used, which may allow the cleartext of the encrypted message to be recovered without prior knowledge of the key.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "encryption",
+        "cipher",
+        "security",
+        "vulnerability",
+        "privacy"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+      "examples": {
+        "positive": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\ncipher = Cipher(algorithms.AES(key), modes.CBC(iv))",
+            "description": "Using a strong and modern cipher algorithm like AES with a secure mode of operation such as CBC."
+          }
+        ],
+        "negative": [
+          {
+            "code": "cipher = Cipher(algorithms.DES(key), modes.ECB())",
+            "description": "Using a weak cipher algorithm like DES, or an insecure mode of operation like ECB, which is susceptible to various attacks.",
+            "pattern": "Cipher\\(algorithms\\.DES\\([^\\)]+\\), modes\\.ECB\\(\\)\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using weak or outdated cipher algorithms such as DES, RC4, or 3DES.",
+          "Use strong, well-regarded encryption algorithms like AES, RSA, or ECC with appropriate key sizes.",
+          "Ensure that secure modes of operation, such as CBC, GCM, or CTR, are used where applicable.",
+          "Regularly review and update cryptographic libraries and practices to align with current standards and best practices."
+        ],
+        "examples": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\ncipher = Cipher(algorithms.AES(key), modes.GCM(iv))",
+            "description": "Using AES with GCM mode, which provides both encryption and integrity protection, ensuring the robustness of the cipher."
+          }
+        ]
+      },
+      "rationale": "Using weak or outdated cipher algorithms can compromise the confidentiality and integrity of encrypted data. Attackers may be able to recover the cleartext without knowledge of the key or modify the encrypted data in ways that can trigger vulnerabilities. It is crucial to use modern, secure encryption algorithms and modes to protect sensitive data effectively."
+    },
+    {
+      "id": "R006",
+      "title": "Verify Server Hostnames During SSL/TLS Connections",
+      "description": "Detects instances where SSL/TLS connections are made without verifying the server's hostname, which can allow attackers to impersonate a trusted host and intercept sensitive data.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "ssl",
+        "tls",
+        "security",
+        "vulnerability",
+        "privacy",
+        "hostname-validation"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-295: Improper Certificate Validation",
+      "examples": {
+        "positive": [
+          {
+            "code": "import ssl\nssl_context = ssl.create_default_context()\nssl_context.check_hostname = True\nssl_context.verify_mode = ssl.CERT_REQUIRED",
+            "description": "Using a secure SSL/TLS context with hostname verification enabled, ensuring that the server's identity is validated."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import ssl\nssl_context = ssl.create_default_context()\nssl_context.check_hostname = False\nssl_context.verify_mode = ssl.CERT_NONE",
+            "description": "Disabling hostname verification and certificate validation, which exposes the connection to man-in-the-middle attacks.",
+            "pattern": "ssl_context\\.check_hostname\\s*=\\s*False"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that hostname verification is enabled by setting `check_hostname` to `True` in the SSL/TLS context.",
+          "Set the `verify_mode` to `ssl.CERT_REQUIRED` to enforce certificate validation during the connection.",
+          "Avoid setting `verify_mode` to `ssl.CERT_NONE`, as this disables certificate validation.",
+          "Regularly review and update SSL/TLS configurations to align with current security standards and best practices."
+        ],
+        "examples": [
+          {
+            "code": "import ssl\nssl_context = ssl.create_default_context()\nssl_context.check_hostname = True\nssl_context.verify_mode = ssl.CERT_REQUIRED",
+            "description": "Enabling hostname verification and requiring certificate validation during SSL/TLS connections."
+          }
+        ]
+      },
+      "rationale": "Disabling server hostname verification during SSL/TLS connections can allow attackers to impersonate trusted hosts, leading to potential data breaches and other security issues. Enforcing hostname verification and certificate validation is essential to maintain the security and integrity of communications over the internet."
+    },
+    {
+      "id": "R007",
+      "title": "Verify Server Certificates During SSL/TLS Connections",
+      "description": "Detects instances where SSL/TLS connections are made without verifying the server's certificate, which can allow attackers to intercept and manipulate encrypted communication.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "ssl",
+        "tls",
+        "security",
+        "vulnerability",
+        "privacy",
+        "certificate-validation"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-295: Improper Certificate Validation",
+      "examples": {
+        "positive": [
+          {
+            "code": "import ssl\nssl_context = ssl.create_default_context()\nssl_context.verify_mode = ssl.CERT_REQUIRED",
+            "description": "Using a secure SSL/TLS context with certificate validation enabled, ensuring that the server's identity is verified."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import ssl\nssl_context = ssl.create_default_context()\nssl_context.verify_mode = ssl.CERT_NONE",
+            "description": "Disabling certificate validation, which exposes the connection to man-in-the-middle attacks.",
+            "pattern": "ssl_context\\.verify_mode\\s*=\\s*ssl\\.CERT_NONE"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that certificate validation is enabled by setting `verify_mode` to `ssl.CERT_REQUIRED` in the SSL/TLS context.",
+          "Avoid setting `verify_mode` to `ssl.CERT_NONE`, as this disables certificate validation.",
+          "Regularly review and update SSL/TLS configurations to align with current security standards and best practices."
+        ],
+        "examples": [
+          {
+            "code": "import ssl\nssl_context = ssl.create_default_context()\nssl_context.verify_mode = ssl.CERT_REQUIRED",
+            "description": "Enabling certificate validation during SSL/TLS connections to ensure the server's identity is verified."
+          }
+        ]
+      },
+      "rationale": "Disabling server certificate validation during SSL/TLS connections can allow attackers to intercept and manipulate encrypted communication, leading to potential data breaches and other security issues. Enforcing certificate validation is essential to maintain the security and integrity of communications over the internet."
+    },
+    {
+      "id": "R008",
+      "title": "Ensure Robust Cryptographic Keys",
+      "description": "Detects instances where cryptographic keys are too short or otherwise insecure, which can expose encrypted data to attacks aimed at recovering the plaintext.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "encryption",
+        "security",
+        "vulnerability",
+        "privacy",
+        "cryptography",
+        "key-management"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-326: Inadequate Encryption Strength",
+      "examples": {
+        "positive": [
+          {
+            "code": "from cryptography.hazmat.primitives import hashes\nfrom cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC\nimport os\n\n# Securely generating a 256-bit AES key\nkdf = PBKDF2HMAC(\n    algorithm=hashes.SHA256(),\n    length=32,\n    salt=os.urandom(16),\n    iterations=100000\n)\nkey = kdf.derive(b'my_password')",
+            "description": "Using a secure method to generate a robust 256-bit AES key using PBKDF2 with SHA-256 and a random salt."
+          }
+        ],
+        "negative": [
+          {
+            "code": "key = b'shortkey'",
+            "description": "Using an insecure, short key for encryption, which is vulnerable to brute-force attacks.",
+            "pattern": "key\\s*=\\s*b'.{1,15}'"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that cryptographic keys are generated using secure algorithms and are of sufficient length (e.g., 256-bit for AES).",
+          "Avoid using hard-coded or easily guessable keys.",
+          "Use key derivation functions (KDFs) like PBKDF2, bcrypt, or Argon2 to securely generate keys from passphrases.",
+          "Regularly review and update cryptographic practices to align with current security standards and best practices."
+        ],
+        "examples": [
+          {
+            "code": "from cryptography.hazmat.primitives import hashes\nfrom cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC\nimport os\n\n# Securely generating a 256-bit AES key\nkdf = PBKDF2HMAC(\n    algorithm=hashes.SHA256(),\n    length=32,\n    salt=os.urandom(16),\n    iterations=100000\n)\nkey = kdf.derive(b'my_password')",
+            "description": "Using PBKDF2 with SHA-256 and a sufficiently long key to ensure the security of the encrypted data."
+          }
+        ]
+      },
+      "rationale": "Using short or insecure cryptographic keys weakens the encryption, making it easier for attackers to recover the plaintext through brute-force attacks or other methods. Ensuring robust key generation and management practices is crucial for maintaining the confidentiality and integrity of sensitive data."
+    },
+    {
+      "id": "R009",
+      "title": "Avoid Using Weak SSL/TLS Protocols",
+      "description": "Detects instances where weak or deprecated SSL/TLS protocols (e.g., SSL 1.0, 2.0, 3.0, TLS 1.0, and TLS 1.1) are used, which can expose encrypted data to attacks aimed at recovering the plaintext.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "ssl",
+        "tls",
+        "security",
+        "vulnerability",
+        "privacy",
+        "protocols"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+      "examples": {
+        "positive": [
+          {
+            "code": "import ssl\n# Create an SSL context with only secure TLS protocols enabled\nssl_context = ssl.create_default_context()\nssl_context.options |= ssl.OP_NO_TLSv1\nssl_context.options |= ssl.OP_NO_TLSv1_1\nssl_context.options |= ssl.OP_NO_SSLv2\nssl_context.options |= ssl.OP_NO_SSLv3",
+            "description": "Creating an SSL context that excludes deprecated and insecure SSL/TLS protocols, ensuring only secure versions are used."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import ssl\n# Using deprecated SSL/TLS protocols\nssl_context = ssl.create_default_context()\nssl_context.options &= ~ssl.OP_NO_SSLv3\nssl_context.options &= ~ssl.OP_NO_TLSv1\nssl_context.options &= ~ssl.OP_NO_TLSv1_1",
+            "description": "Using SSL/TLS context that includes deprecated and insecure protocols, which can expose encrypted data to attacks.",
+            "pattern": "ssl_context\\.options\\s*&=\\s*~ssl\\.OP_NO_SSLv3|ssl\\.OP_NO_TLSv1|ssl\\.OP_NO_TLSv1_1"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Create an SSL/TLS context that explicitly disables deprecated and insecure protocols like SSL 2.0, SSL 3.0, TLS 1.0, and TLS 1.1.",
+          "Use only secure protocols such as TLS 1.2 or TLS 1.3.",
+          "Regularly review and update SSL/TLS configurations to adhere to current security standards and best practices."
+        ],
+        "examples": [
+          {
+            "code": "import ssl\n# Create an SSL context with only secure TLS protocols enabled\nssl_context = ssl.create_default_context()\nssl_context.options |= ssl.OP_NO_TLSv1\nssl_context.options |= ssl.OP_NO_TLSv1_1\nssl_context.options |= ssl.OP_NO_SSLv2\nssl_context.options |= ssl.OP_NO_SSLv3",
+            "description": "Ensuring only secure TLS protocols are enabled in the SSL/TLS context, excluding outdated and vulnerable ones."
+          }
+        ]
+      },
+      "rationale": "Using weak or deprecated SSL/TLS protocols can expose encrypted data to attacks aimed at recovering the plaintext. Ensuring that only strong, up-to-date protocols are used is critical for maintaining secure communications and protecting sensitive information from potential breaches."
+    },
+    {
+      "id": "R010",
+      "title": "Avoid Using Insecure Functions",
+      "description": "Detects instances where insecure functions, such as those prone to buffer overflow vulnerabilities, are used. These functions often fail to properly check or limit the size of the data they handle, leading to potential security issues.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "buffer-overflow",
+        "security",
+        "vulnerability",
+        "memory",
+        "functions"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-120: Buffer Copy without Checking Size of Input",
+      "examples": {
+        "positive": [
+          {
+            "code": "def safe_copy(src, dest):\n    dest_size = len(dest)\n    if len(src) < dest_size:\n        dest[:len(src)] = src\n    else:\n        raise ValueError('Source data is too large for destination buffer')",
+            "description": "Using a safe function that checks the size of the source data before copying it to the destination buffer to prevent buffer overflow."
+          }
+        ],
+        "negative": [
+          {
+            "code": "def unsafe_copy(src, dest):\n    dest[:] = src\n    # No check for buffer size",
+            "description": "Using an insecure function that copies data without checking the buffer size, leading to potential buffer overflow vulnerabilities.",
+            "pattern": "dest\\s*=\\s*src"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using functions that do not check the size of the data they handle, such as `strcpy`, `sprintf`, `gets`, etc.",
+          "Use safer alternatives that include buffer size checks, such as `strncpy`, `snprintf`, and `fgets`.",
+          "Implement manual checks to ensure that the data fits within the buffer limits before performing operations.",
+          "Regularly review and test code to identify and replace insecure functions with their secure counterparts."
+        ],
+        "examples": [
+          {
+            "code": "def safe_copy(src, dest):\n    dest_size = len(dest)\n    if len(src) < dest_size:\n        dest[:len(src)] = src\n    else:\n        raise ValueError('Source data is too large for destination buffer')",
+            "description": "Ensuring that the copy operation checks for buffer size to prevent potential buffer overflow."
+          }
+        ]
+      },
+      "rationale": "Insecure functions that do not validate buffer sizes can lead to buffer overflow vulnerabilities, which might allow attackers to execute arbitrary code, crash the application, or cause other security issues. Using functions that perform size checks and validating input data helps in preventing such vulnerabilities and maintaining application security."
+    },
+    {
+      "id": "R011",
+      "title": "Specify Field Width for %s in scanf() and fscanf()",
+      "description": "Detects instances where the format string used with `scanf()` or `fscanf()` does not specify a field width for the `%s` string placeholder. This omission can lead to buffer overflow vulnerabilities if the input string exceeds the buffer size.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "buffer-overflow",
+        "security",
+        "vulnerability",
+        "input-validation",
+        "scanf",
+        "fscanf"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-120: Buffer Copy without Checking Size of Input",
+      "examples": {
+        "positive": [
+          {
+            "code": "char buffer[64];\nscanf(\"%63s\", buffer);",
+            "description": "Specifying a field width for `%s` to ensure that input does not exceed the buffer size, preventing buffer overflow."
+          }
+        ],
+        "negative": [
+          {
+            "code": "char buffer[64];\nscanf(\"%s\", buffer);",
+            "description": "Not specifying a field width for `%s`, which could lead to buffer overflow if the input string is larger than the buffer.",
+            "pattern": "scanf\\(\"%s\""
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Always specify a field width for the `%s` format specifier in `scanf()` and `fscanf()` to limit the number of characters read and prevent buffer overflow.",
+          "Ensure the field width specified does not exceed the size of the destination buffer minus one (for the null terminator).",
+          "Review and update all instances of `scanf()` and `fscanf()` in the codebase to ensure they use field widths for string input.",
+          "Regularly test code to ensure it handles buffer sizes correctly and does not introduce vulnerabilities."
+        ],
+        "examples": [
+          {
+            "code": "char buffer[64];\nscanf(\"%63s\", buffer);",
+            "description": "Specifying a field width to ensure that the input does not exceed the buffer size, thus preventing potential buffer overflow."
+          }
+        ]
+      },
+      "rationale": "Failing to specify a field width for `%s` in `scanf()` and `fscanf()` can lead to buffer overflows if input data exceeds the buffer size. Ensuring that a field width is specified helps prevent such vulnerabilities by limiting the amount of data read into the buffer, thereby improving the security and stability of the application."
+    },
+    {
+      "id": "R012",
+      "title": "Verify Account Validity in PAM Authentication",
+      "description": "Detects instances where account validity checks (such as account expiration or account locking) are not performed during user authentication with PAM. This could lead to unauthorized access if the account is invalid or should not be permitted access.",
+      "impact": "Major",
+      "category": "Security",
+      "tags": [
+        "PAM",
+        "authentication",
+        "account-validity",
+        "security",
+        "access-control"
+      ],
+      "severity": "Major",
+      "cwe": "CWE-285: Improper Authorization",
+      "examples": {
+        "positive": [
+          {
+            "code": "import pam\n\ndef authenticate_user(username, password):\n    if pam.authenticate(username, password) and pam.account_status(username) == 'valid':\n        return True\n    return False",
+            "description": "Using PAM to check both authentication and account validity before granting access."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import pam\n\ndef authenticate_user(username, password):\n    if pam.authenticate(username, password):\n        return True\n    return False",
+            "description": "Authenticating users without checking account validity, which may allow access to invalid or expired accounts.",
+            "pattern": "pam\\.authenticate\\(username, password\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use PAM functions to not only authenticate users but also to check the validity of the account (e.g., whether it is expired or locked).",
+          "Implement additional checks to verify the status of the account and ensure it meets the criteria for active and valid accounts before granting access.",
+          "Regularly review PAM configurations and authentication logic to ensure they adhere to security best practices."
+        ],
+        "examples": [
+          {
+            "code": "import pam\n\ndef authenticate_user(username, password):\n    if pam.authenticate(username, password) and pam.account_status(username) == 'valid':\n        return True\n    return False",
+            "description": "Ensuring both authentication and account validity checks are performed to prevent unauthorized access."
+          }
+        ]
+      },
+      "rationale": "Failing to verify the validity of accounts during authentication can lead to unauthorized access if accounts are expired, locked, or otherwise invalid. Ensuring that account validity is checked alongside authentication improves security and helps prevent unauthorized access to resources."
+    }
+  ]
+}
