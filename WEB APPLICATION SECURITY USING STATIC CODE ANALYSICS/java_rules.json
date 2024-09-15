@@ -1,0 +1,2319 @@
+{
+    "rules": [
+        {
+            "id": "java01",
+            "title": "Credentials Should Not Be Hard-Coded",
+            "description": "Detects instances where credentials or secrets are hard-coded in the source code, which can lead to significant security vulnerabilities and potential exploitation.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "trustworthiness", "responsibility"],
+            "severity": "High",
+            "cwe": "CWE-798: Use of Hard-coded Credentials",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Properties props = new Properties();\nprops.load(new FileInputStream(\"config.properties\"));\nString username = props.getProperty(\"db.username\");\nString password = props.getProperty(\"db.password\");",
+                  "description": "This compliant code loads credentials from an external properties file instead of hard-coding them."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String username = \"admin\";\nString password = \"password123\";",
+                  "description": "This code hard-codes credentials directly in the source code, which should be avoided.",
+                  "pattern": "\"password\"|\"secret\"|\"key\"|\"token\""
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Remove hard-coded credentials from the source code.",
+                "Store credentials in a secure external configuration file or environment variables.",
+                "Ensure the configuration files or environment variables are properly secured and access-controlled."
+              ],
+              "examples": [
+                {
+                  "code": "Properties props = new Properties();\nprops.load(new FileInputStream(\"config.properties\"));\nString username = props.getProperty(\"db.username\");\nString password = props.getProperty(\"db.password\");",
+                  "description": "This compliant solution uses an external properties file to store credentials, enhancing security."
+                }
+              ]
+            },
+            "rationale": "Hard-coding credentials in the source code violates trust boundaries and can lead to significant security vulnerabilities. Storing credentials securely in external configuration files or environment variables ensures that sensitive information is protected and only accessible to authorized entities."
+          },
+          {
+            "id": "java02",
+            "title": "Components Should Not Be Vulnerable to Intent Redirection",
+            "description": "Detects instances where components are vulnerable to intent redirection, which can lead to significant security vulnerabilities and potential exploitation.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "android", "injection"],
+            "severity": "High",
+            "cwe": "CWE-926: Improper Export of Android Components",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Intent intent = new Intent(this, TargetActivity.class);\nstartActivity(intent);",
+                  "description": "This compliant code does not use externally provided intents to start new components."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Intent intent = getIntent();\nString target = intent.getStringExtra(\"target\");\nIntent newIntent = new Intent();\nnewIntent.setClassName(this, target);\nstartActivity(newIntent);",
+                  "description": "This code uses an externally provided intent to start a new component, which should be avoided.",
+                  "pattern": "getIntent()|setClassName|startActivity"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using externally provided intents to start new components.",
+                "Validate and sanitize any intent data before using it.",
+                "Use explicit intents to start components when possible.",
+                "Restrict component exposure by using appropriate permissions and intent filters."
+              ],
+              "examples": [
+                {
+                  "code": "Intent intent = new Intent(this, TargetActivity.class);\nstartActivity(intent);",
+                  "description": "This compliant solution uses an explicit intent to start a new component, ensuring security."
+                }
+              ]
+            },
+            "rationale": "Intent redirection vulnerabilities occur when an application publicly exposes a feature that uses an externally provided intent to start a new component. This can lead to significant security issues, including information disclosure, attack surface increase, privilege escalation, and persistent code execution. Ensuring components are not vulnerable to intent redirection helps maintain the security and integrity of the application."
+          },
+          {
+            "id": "java03",
+            "title": "XML Parsers Should Not Allow Inclusion of Arbitrary Files",
+            "description": "Detects instances where XML parsers are configured to allow the inclusion of arbitrary files via the xinclude element, which can lead to significant security vulnerabilities and potential exploitation.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "consistency", "conventional", "symbolic-execution"],
+            "severity": "High",
+            "cwe": "CWE-611: Improper Restriction of XML External Entity Reference",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/xinclude\", false);\nSAXParser parser = factory.newSAXParser();",
+                  "description": "This compliant code configures the XML parser to disallow the inclusion of arbitrary files via the xinclude element."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/xinclude\", true);\nSAXParser parser = factory.newSAXParser();",
+                  "description": "This code configures the XML parser to allow the inclusion of arbitrary files via the xinclude element, which should be avoided.",
+                  "pattern": "setFeature\\(\"http://apache.org/xml/features/xinclude\", true\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Disable the xinclude feature in the XML parser configuration.",
+                "Ensure that the XML parser is not configured to allow the inclusion of arbitrary files.",
+                "Validate and sanitize any XML content before parsing it."
+              ],
+              "examples": [
+                {
+                  "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/xinclude\", false);\nSAXParser parser = factory.newSAXParser();",
+                  "description": "This compliant solution configures the XML parser to disallow the inclusion of arbitrary files via the xinclude element, enhancing security."
+                }
+              ]
+            },
+            "rationale": "Allowing the inclusion of arbitrary files in XML documents can lead to severe security issues such as sensitive file disclosure and server-side request forgery. Disabling the xinclude feature and ensuring proper configuration of XML parsers helps prevent these vulnerabilities and protects the application's integrity and confidentiality."
+          },
+          {
+            "id": "java04",
+            "title": "Extracting Archives Should Not Lead to Zip Slip Vulnerabilities",
+            "description": "Detects instances where extracting archives could lead to Zip Slip vulnerabilities, which can allow path traversal and potentially overwrite critical files.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe"],
+            "severity": "High",
+            "cwe": "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "public void extractZip(File zipFile, File outputDir) throws IOException {\n    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {\n        ZipEntry entry;\n        while ((entry = zis.getNextEntry()) != null) {\n            File newFile = new File(outputDir, entry.getName());\n            String canonicalPath = newFile.getCanonicalPath();\n            if (!canonicalPath.startsWith(outputDir.getCanonicalPath() + File.separator)) {\n                throw new IOException(\"Entry is outside of the target dir: \" + entry.getName());\n            }\n            // Process the entry...\n        }\n    }\n}",
+                  "description": "This compliant code validates the canonical path of each entry to prevent path traversal and Zip Slip vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "public void extractZip(File zipFile, File outputDir) throws IOException {\n    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {\n        ZipEntry entry;\n        while ((entry = zis.getNextEntry()) != null) {\n            File newFile = new File(outputDir, entry.getName());\n            // Process the entry...\n        }\n    }\n}",
+                  "description": "This code does not validate the path of each entry, which could lead to path traversal and Zip Slip vulnerabilities.",
+                  "pattern": "new File\\(outputDir, entry.getName\\(\\)\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Validate the canonical path of each archive entry before extracting.",
+                "Ensure that the canonical path starts with the intended output directory's canonical path.",
+                "Throw an exception if the validation fails to prevent extraction."
+              ],
+              "examples": [
+                {
+                  "code": "public void extractZip(File zipFile, File outputDir) throws IOException {\n    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {\n        ZipEntry entry;\n        while ((entry = zis.getNextEntry()) != null) {\n            File newFile = new File(outputDir, entry.getName());\n            String canonicalPath = newFile.getCanonicalPath();\n            if (!canonicalPath.startsWith(outputDir.getCanonicalPath() + File.separator)) {\n                throw new IOException(\"Entry is outside of the target dir: \" + entry.getName());\n            }\n            // Process the entry...\n        }\n    }\n}",
+                  "description": "This compliant solution validates the canonical path of each entry to prevent path traversal and Zip Slip vulnerabilities, ensuring security."
+                }
+              ]
+            },
+            "rationale": "Zip Slip vulnerabilities occur when an application constructs a file path from an archive entry name without validating it, allowing path traversal and potential overwriting of critical files. Proper validation of the canonical path of each entry before extraction prevents these vulnerabilities and protects the application's integrity and security."
+          },
+          {
+            "id": "java05",
+            "title": "Dynamic Code Execution Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where dynamic code execution can be influenced by untrusted data, which can lead to significant security vulnerabilities and potential exploitation.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe"],
+            "severity": "High",
+            "cwe": "CWE-94: Improper Control of Generation of Code ('Code Injection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String trustedCode = \"System.out.println('Hello, world!');\";\nScriptEngineManager manager = new ScriptEngineManager();\nScriptEngine engine = manager.getEngineByName(\"JavaScript\");\nengine.eval(trustedCode);",
+                  "description": "This compliant code executes trusted code and does not accept untrusted input for dynamic code execution."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String userCode = request.getParameter(\"code\");\nScriptEngineManager manager = new ScriptEngineManager();\nScriptEngine engine = manager.getEngineByName(\"JavaScript\");\nengine.eval(userCode);",
+                  "description": "This code executes untrusted input received from a user, which can lead to code injection vulnerabilities.",
+                  "pattern": "engine.eval\\(.*request.getParameter\\("
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid executing dynamic code that originates from untrusted input.",
+                "If dynamic code execution is necessary, validate and sanitize the input rigorously.",
+                "Use a whitelist approach where only predefined, trusted code can be executed."
+              ],
+              "examples": [
+                {
+                  "code": "String trustedCode = \"System.out.println('Hello, world!');\";\nScriptEngineManager manager = new ScriptEngineManager();\nScriptEngine engine = manager.getEngineByName(\"JavaScript\");\nengine.eval(trustedCode);",
+                  "description": "This compliant solution executes only trusted code, preventing code injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "Dynamic code execution vulnerabilities occur when applications allow the execution of code instructions from untrusted data. This can lead to arbitrary code execution in the context of the vulnerable application, resulting in severe security risks. Ensuring that only trusted code is executed and validating input rigorously helps prevent these vulnerabilities and protects the application's integrity and security."
+          },
+          {
+            "id": "java06",
+            "title": "NoSQL Operations Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where NoSQL operations can be influenced by untrusted data, leading to significant security vulnerabilities and potential exploitation.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe"],
+            "severity": "High",
+            "cwe": "CWE-943: Improper Neutralization of Special Elements in Data Query Logic ('NoSQL Injection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Document query = new Document(\"username\", \"trustedUser\");\nMongoCollection<Document> collection = database.getCollection(\"users\");\ncollection.find(query);",
+                  "description": "This compliant code uses trusted data for the query, avoiding NoSQL injection risks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String userInput = request.getParameter(\"username\");\nDocument query = new Document(\"username\", userInput);\nMongoCollection<Document> collection = database.getCollection(\"users\");\ncollection.find(query);",
+                  "description": "This code uses untrusted input directly in the query, which can lead to NoSQL injection vulnerabilities.",
+                  "pattern": "new Document\\(.*request.getParameter\\("
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using untrusted input directly in NoSQL queries.",
+                "Validate and sanitize all input before using it in a NoSQL query.",
+                "Use parameterized queries or ORM libraries that provide built-in protection against injection attacks."
+              ],
+              "examples": [
+                {
+                  "code": "String userInput = request.getParameter(\"username\");\nString sanitizedInput = sanitizeInput(userInput);\nDocument query = new Document(\"username\", sanitizedInput);\nMongoCollection<Document> collection = database.getCollection(\"users\");\ncollection.find(query);",
+                  "description": "This compliant solution sanitizes the user input before using it in the query, preventing NoSQL injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "NoSQL injection vulnerabilities occur when applications allow untrusted data to influence NoSQL queries without proper sanitization. This can lead to unauthorized access, data leakage, data deletion, and other severe security risks. Ensuring that all input is validated and sanitized before use in NoSQL operations helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java07",
+            "title": "HTTP Request Redirections Should Not Be Open to Forging Attacks",
+            "description": "Detects instances where HTTP redirection is performed using untrusted data, leading to potential open redirection vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe"],
+            "severity": "High",
+            "cwe": "CWE-601: URL Redirection to Untrusted Site ('Open Redirect')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String targetUrl = getTrustedUrl();\nresponse.sendRedirect(targetUrl);",
+                  "description": "This compliant code redirects to a trusted URL, avoiding open redirection risks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String targetUrl = request.getParameter(\"url\");\nresponse.sendRedirect(targetUrl);",
+                  "description": "This code uses untrusted input directly in the redirection, which can lead to open redirection vulnerabilities.",
+                  "pattern": "response.sendRedirect\\(.*request.getParameter\\("
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using untrusted input directly in HTTP redirections.",
+                "Validate and sanitize all input used in redirections.",
+                "Use a whitelist approach where only predefined, trusted URLs can be used for redirection."
+              ],
+              "examples": [
+                {
+                  "code": "String targetUrl = request.getParameter(\"url\");\nif (isValidRedirect(targetUrl)) {\n    response.sendRedirect(targetUrl);\n} else {\n    response.sendError(HttpServletResponse.SC_BAD_REQUEST, \"Invalid redirect URL\");\n}",
+                  "description": "This compliant solution validates the user input before using it in the redirection, preventing open redirection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "Open redirection vulnerabilities occur when applications allow user-controllable data to dictate redirection targets without proper validation. This can lead to unauthorized redirections, phishing attacks, and other security risks. Ensuring that all redirection targets are validated and sanitized helps prevent these vulnerabilities and protects the application's integrity and security."
+          },
+          {
+            "id": "java08",
+            "title": "Deserialization Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where deserialization is performed using untrusted data, leading to potential deserialization injection vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe"],
+            "severity": "High",
+            "cwe": "CWE-502: Deserialization of Untrusted Data",
+            "examples": {
+              "positive": [
+                {
+                  "code": "ObjectInputStream ois = new ObjectInputStream(new FileInputStream(\"trustedData.ser\"));\nMyObject obj = (MyObject) ois.readObject();",
+                  "description": "This compliant code deserializes trusted data, avoiding deserialization injection risks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(request.getParameter(\"data\").getBytes()));\nMyObject obj = (MyObject) ois.readObject();",
+                  "description": "This code deserializes untrusted input directly, which can lead to deserialization injection vulnerabilities.",
+                  "pattern": "new ObjectInputStream\\(.*request.getParameter\\("
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid deserializing untrusted data.",
+                "Validate and sanitize all input before deserialization.",
+                "Use libraries that provide built-in protection against deserialization attacks, such as whitelisting expected classes."
+              ],
+              "examples": [
+                {
+                  "code": "String userInput = request.getParameter(\"data\");\nString sanitizedInput = sanitizeInput(userInput);\nObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(sanitizedInput.getBytes()));\nMyObject obj = (MyObject) ois.readObject();",
+                  "description": "This compliant solution sanitizes the user input before deserialization, preventing deserialization injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "Deserialization injection vulnerabilities occur when applications deserialize wholly or partially untrusted data without verification. This can lead to unauthorized code execution, data manipulation, and other severe security risks. Ensuring that all input is validated and sanitized before deserialization helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java10",
+            "title": "Database Queries Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where user input is used in database queries without proper sanitization, leading to potential SQL injection vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe", "sql"],
+            "severity": "High",
+            "cwe": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "PreparedStatement stmt = connection.prepareStatement(\"SELECT * FROM users WHERE username = ?\");\nstmt.setString(1, username);\nResultSet rs = stmt.executeQuery();",
+                  "description": "This compliant code uses a prepared statement to safely include user input in the query, preventing SQL injection vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Statement stmt = connection.createStatement();\nResultSet rs = stmt.executeQuery(\"SELECT * FROM users WHERE username = '\" + username + \"'\");",
+                  "description": "This code uses user input directly in the SQL query, which can lead to SQL injection vulnerabilities.",
+                  "pattern": "executeQuery\\(.*\".*'\" \\+ .* \\+ \".*'\""
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user input directly in SQL queries.",
+                "Use prepared statements or parameterized queries to include user input in SQL queries.",
+                "Validate and sanitize all input before using it in SQL queries."
+              ],
+              "examples": [
+                {
+                  "code": "PreparedStatement stmt = connection.prepareStatement(\"SELECT * FROM users WHERE username = ?\");\nstmt.setString(1, username);\nResultSet rs = stmt.executeQuery();",
+                  "description": "This compliant solution uses a prepared statement to safely include user input in the query, preventing SQL injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "SQL injection vulnerabilities occur when applications allow user input to influence database queries without proper sanitization. This can lead to unauthorized access, data leakage, data manipulation, and other severe security risks. Ensuring that all input is validated and sanitized before use in SQL queries helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java11",
+            "title": "XML Parsers Should Not Be Vulnerable to XXE Attacks",
+            "description": "Detects instances where XML parsers are configured to process external entities, leading to potential XXE vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe", "xml"],
+            "severity": "High",
+            "cwe": "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\ndbf.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\ndbf.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\ndbf.setXIncludeAware(false);\ndbf.setExpandEntityReferences(false);",
+                  "description": "This compliant code configures the XML parser to disallow external entities, preventing XXE vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new FileInputStream(\"file.xml\"));",
+                  "description": "This code does not configure the XML parser to disallow external entities, which can lead to XXE vulnerabilities.",
+                  "pattern": "newDocumentBuilder\\(\\)\\.parse\\("
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Disable external entity processing in XML parsers.",
+                "Configure XML parsers to disallow external entities and DTDs.",
+                "Use libraries that provide built-in protection against XXE attacks."
+              ],
+              "examples": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\ndbf.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\ndbf.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\ndbf.setXIncludeAware(false);\ndbf.setExpandEntityReferences(false);\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new FileInputStream(\"file.xml\"));",
+                  "description": "This compliant solution configures the XML parser to disallow external entities, preventing XXE vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "XML External Entity (XXE) vulnerabilities occur when XML parsers are configured to process external entities without proper restrictions. This can lead to data leakage, denial of service, server-side request forgery (SSRF), and other severe security risks. Ensuring that XML parsers are properly configured to disallow external entities and DTDs helps prevent these vulnerabilities and protects the application's integrity and security."
+          },
+          {
+            "id": "java12",
+            "title": "A Secure Password Should Be Used When Connecting to a Database",
+            "description": "Detects instances where a database connection is established without a password, leading to potential security vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "authentication", "cwe", "database"],
+            "severity": "High",
+            "cwe": "CWE-798: Use of Hard-coded Credentials",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String url = \"jdbc:mysql://localhost:3306/mydatabase\";\nString username = \"user\";\nString password = System.getenv(\"DB_PASSWORD\");\nConnection connection = DriverManager.getConnection(url, username, password);",
+                  "description": "This compliant code retrieves the database password from an environment variable, ensuring that a secure password is used."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String url = \"jdbc:mysql://localhost:3306/mydatabase\";\nString username = \"user\";\nString password = \"\";\nConnection connection = DriverManager.getConnection(url, username, password);",
+                  "description": "This code uses an empty password for the database connection, which is insecure and should be avoided.",
+                  "pattern": "getConnection\\(.*\"\"\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that a secure password is used for database connections.",
+                "Avoid using empty or hard-coded passwords in the code.",
+                "Retrieve the password from a secure location, such as an environment variable or a secrets management service."
+              ],
+              "examples": [
+                {
+                  "code": "String url = \"jdbc:mysql://localhost:3306/mydatabase\";\nString username = \"user\";\nString password = System.getenv(\"DB_PASSWORD\");\nConnection connection = DriverManager.getConnection(url, username, password);",
+                  "description": "This compliant solution retrieves the database password from an environment variable, ensuring that a secure password is used."
+                }
+              ]
+            },
+            "rationale": "Using an empty or hard-coded password for database connections introduces a significant security risk, allowing unauthorized access to sensitive data. Ensuring that a secure password is used helps protect the database from unauthorized access, data breaches, and other security threats. Retrieving the password from a secure location, such as an environment variable or a secrets management service, enhances the security of the application."
+          },
+          {
+            "id": "java13",
+            "title": "XPath Expressions Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where user input is used in XPath expressions without proper sanitization, leading to potential XPath injection vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe", "xpath"],
+            "severity": "High",
+            "cwe": "CWE-643: Improper Neutralization of Data within XPath Expressions ('XPath Injection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "XPathFactory xPathFactory = XPathFactory.newInstance();\nXPath xPath = xPathFactory.newXPath();\nXPathExpression expr = xPath.compile(\"/users/user[username=? and password=?]\");\nObject[] params = {username, password};\nNodeList nodes = (NodeList) expr.evaluate(params, XPathConstants.NODESET);",
+                  "description": "This compliant code uses parameterized XPath expressions to safely include user input, preventing XPath injection vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "XPathFactory xPathFactory = XPathFactory.newInstance();\nXPath xPath = xPathFactory.newXPath();\nString expression = \"/users/user[username='\" + username + \"' and password='\" + password + \"']\";\nNodeList nodes = (NodeList) xPath.evaluate(expression, document, XPathConstants.NODESET);",
+                  "description": "This code concatenates user input directly into the XPath expression, which can lead to XPath injection vulnerabilities.",
+                  "pattern": "evaluate\\(.*\".*'\" \\+ .* \\+ \".*'\""
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user input directly in XPath expressions.",
+                "Use parameterized XPath expressions or other safe methods to include user input.",
+                "Validate and sanitize all input before using it in XPath expressions."
+              ],
+              "examples": [
+                {
+                  "code": "XPathFactory xPathFactory = XPathFactory.newInstance();\nXPath xPath = xPathFactory.newXPath();\nXPathExpression expr = xPath.compile(\"/users/user[username=? and password=?]\");\nObject[] params = {username, password};\nNodeList nodes = (NodeList) expr.evaluate(params, XPathConstants.NODESET);",
+                  "description": "This compliant solution uses parameterized XPath expressions to safely include user input, preventing XPath injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "XPath injection vulnerabilities occur when applications allow user input to influence XPath expressions without proper sanitization. This can lead to unauthorized access, data leakage, data manipulation, and other severe security risks. Ensuring that all input is validated and sanitized before use in XPath expressions helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java14",
+            "title": "I/O Function Calls Should Not Be Vulnerable to Path Injection Attacks",
+            "description": "Detects instances where user input is used to construct file paths without proper validation, leading to potential path injection vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe", "file"],
+            "severity": "High",
+            "cwe": "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String filename = Paths.get(baseDirectory, sanitize(userInput)).toString();\nFile file = new File(filename);\nif (file.getCanonicalPath().startsWith(baseDirectory)) {\n  // Safe to read/write the file\n}",
+                  "description": "This compliant code sanitizes user input and ensures that the resulting file path stays within the intended directory, preventing path injection vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String filename = baseDirectory + userInput;\nFile file = new File(filename);\nFileInputStream fis = new FileInputStream(file);",
+                  "description": "This code concatenates user input directly into the file path without validation, which can lead to path injection vulnerabilities.",
+                  "pattern": "new FileInputStream\\(new File\\(.*\\+.*\\)\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user input directly in file paths.",
+                "Sanitize user input to remove any potentially harmful characters or patterns (e.g., '../').",
+                "Ensure that the constructed file path stays within a designated directory.",
+                "Use libraries or functions that provide built-in protection against path traversal attacks."
+              ],
+              "examples": [
+                {
+                  "code": "String filename = Paths.get(baseDirectory, sanitize(userInput)).toString();\nFile file = new File(filename);\nif (file.getCanonicalPath().startsWith(baseDirectory)) {\n  // Safe to read/write the file\n}",
+                  "description": "This compliant solution sanitizes user input and ensures that the resulting file path stays within the intended directory, preventing path injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "Path injection vulnerabilities occur when applications allow user input to influence file paths without proper validation. This can lead to unauthorized file access, data leakage, data manipulation, and other severe security risks. Ensuring that all input is validated and sanitized before use in file paths helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java15",
+            "title": "LDAP Queries Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where user input is used in LDAP queries without proper sanitization, leading to potential LDAP injection vulnerabilities.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "high", "intentionality", "injection", "cwe", "ldap"],
+            "severity": "High",
+            "cwe": "CWE-90: Improper Neutralization of Special Elements used in an LDAP Query ('LDAP Injection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String filter = \"(&(uid=?)(userPassword=?))\";\nDirContext ctx = new InitialDirContext(env);\nNamingEnumeration<SearchResult> results = ctx.search(\"ou=users,dc=example,dc=com\", filter, new Object[]{username, password}, new SearchControls());",
+                  "description": "This compliant code uses parameterized queries to safely include user input, preventing LDAP injection vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String filter = \"(&(uid=\" + username + \")(userPassword=\" + password + \"))\";\nDirContext ctx = new InitialDirContext(env);\nNamingEnumeration<SearchResult> results = ctx.search(\"ou=users,dc=example,dc=com\", filter);",
+                  "description": "This code concatenates user input directly into the LDAP query, which can lead to LDAP injection vulnerabilities.",
+                  "pattern": "search\\(.*\".*\\+.*\\+.*\".*\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user input directly in LDAP queries.",
+                "Use parameterized LDAP queries or other safe methods to include user input.",
+                "Validate and sanitize all input before using it in LDAP queries."
+              ],
+              "examples": [
+                {
+                  "code": "String filter = \"(&(uid=?)(userPassword=?))\";\nDirContext ctx = new InitialDirContext(env);\nNamingEnumeration<SearchResult> results = ctx.search(\"ou=users,dc=example,dc=com\", filter, new Object[]{username, password}, new SearchControls());",
+                  "description": "This compliant solution uses parameterized LDAP queries to safely include user input, preventing LDAP injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "LDAP injection vulnerabilities occur when applications allow user input to influence LDAP queries without proper sanitization. This can lead to unauthorized access, data leakage, data manipulation, and other severe security risks. Ensuring that all input is validated and sanitized before use in LDAP queries helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java16",
+            "title": "OS Commands Should Not Be Vulnerable to Command Injection Attacks",
+            "description": "Detects instances where user input is used in OS command execution without proper sanitization, leading to potential command injection vulnerabilities.",
+            "impact": "Blocker",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "blocker", "intentionality", "injection", "cwe", "os-command"],
+            "severity": "Critical",
+            "cwe": "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "ProcessBuilder pb = new ProcessBuilder(\"/bin/sh\", \"-c\", \"ls\", \"-l\");\nProcess p = pb.start();",
+                  "description": "This compliant code uses a fixed command without including any user input, preventing OS command injection vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String cmd = \"/bin/sh -c ls -l \" + userInput;\nRuntime.getRuntime().exec(cmd);",
+                  "description": "This code concatenates user input directly into the OS command, which can lead to OS command injection vulnerabilities.",
+                  "pattern": "exec\\(.*\".*\\+.*\\+.*\".*\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user input directly in OS command execution.",
+                "Use parameterized OS commands or other safe methods to include user input.",
+                "Validate and sanitize all input before using it in OS commands."
+              ],
+              "examples": [
+                {
+                  "code": "ProcessBuilder pb = new ProcessBuilder(\"/bin/sh\", \"-c\", \"ls\", \"-l\");\nProcess p = pb.start();",
+                  "description": "This compliant solution uses a fixed OS command without including any user input, preventing OS command injection vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "OS command injection vulnerabilities occur when applications allow user input to influence OS command execution without proper sanitization. This can lead to unauthorized command execution, data leakage, data manipulation, denial of service, and other severe security risks. Ensuring that all input is validated and sanitized before use in OS commands helps prevent these vulnerabilities and protects the application's data integrity and security."
+          },
+          {
+            "id": "java17",
+            "title": "Counter Mode Initialization Vectors Should Not Be Reused",
+            "description": "Detects instances where the same initialization vector (IV) is reused with a given key in counter mode encryption, leading to potential vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "iv-reuse", "encryption"],
+            "severity": "Critical",
+            "cwe": "CWE-329: Improper Enforcement of a Single, Unique Action per Iteration ('IV Reuse')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SecureRandom secureRandom = new SecureRandom();\nbyte[] iv = new byte[12];\nsecureRandom.nextBytes(iv);\nGCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, parameterSpec);",
+                  "description": "This compliant code generates a new random IV for each encryption operation, preventing IV reuse vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "byte[] iv = new byte[12];\nGCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, parameterSpec);",
+                  "description": "This code uses a fixed IV, which can lead to IV reuse vulnerabilities when the same key is used for multiple encryption operations.",
+                  "pattern": "GCMParameterSpec\\(.*new byte\\[.*\\].*\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using fixed or constant initialization vectors (IVs).",
+                "Generate a new random IV for each encryption operation.",
+                "Ensure that the IV is unique for each encryption with a given key."
+              ],
+              "examples": [
+                {
+                  "code": "SecureRandom secureRandom = new SecureRandom();\nbyte[] iv = new byte[12];\nsecureRandom.nextBytes(iv);\nGCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, parameterSpec);",
+                  "description": "This compliant solution generates a new random IV for each encryption operation, preventing IV reuse vulnerabilities."
+                }
+              ]
+            },
+            "rationale": "Reusing initialization vectors (IVs) with the same key in counter mode encryption can lead to severe vulnerabilities, including the potential to decrypt sensitive data and bypass key protections. By ensuring that each IV is unique and random, the integrity and security of encrypted data are maintained, preventing attackers from exploiting deterministic keystreams and reducing the risk of key recovery."
+          },
+          {
+            "id": "java18",
+            "title": "Thread Suspensions Should Not Be Vulnerable to Denial of Service Attacks",
+            "description": "Detects instances where user-controlled data is used as a parameter for thread suspension operations, which can lead to potential Denial of Service (DoS) attacks.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "denial-of-service", "thread", "suspension"],
+            "severity": "Critical",
+            "cwe": "CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Thread.sleep(1000);",
+                  "description": "This compliant code uses a fixed and reasonable duration for thread suspension, preventing potential DoS attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Thread.sleep(Long.parseLong(userInput));",
+                  "description": "This code uses user input directly as the duration for thread suspension, which can lead to DoS vulnerabilities if the input is manipulated to a large value.",
+                  "pattern": "Thread\\.sleep\\(.*Long\\.parseLong\\(.*\\).*\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user input directly in thread suspension operations.",
+                "Use fixed, reasonable durations for thread suspensions.",
+                "If dynamic values are required, implement strict validation and enforce upper limits on the duration."
+              ],
+              "examples": [
+                {
+                  "code": "long duration = 1000; // Fixed duration\nThread.sleep(duration);",
+                  "description": "This compliant solution uses a fixed duration for thread suspension, preventing potential DoS attacks."
+                },
+                {
+                  "code": "long duration = Long.parseLong(userInput);\nif (duration > 0 && duration <= 1000) {\n    Thread.sleep(duration);\n}",
+                  "description": "This compliant solution validates user input and enforces an upper limit on the duration, preventing potential DoS attacks."
+                }
+              ]
+            },
+            "rationale": "Allowing user-controlled data to determine the duration of thread suspensions can lead to Denial of Service (DoS) vulnerabilities. An attacker can exploit this by providing a large value, causing the application to become unresponsive or slow down significantly. Ensuring that thread suspensions use fixed, reasonable durations or validated user inputs helps prevent such vulnerabilities and maintains the application's availability and performance."
+          },
+          {
+            "id": "java19",
+            "title": "A New Session Should Be Created During User Authentication",
+            "description": "Detects instances where a new session is not created during user authentication, leading to potential session fixation vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "session-fixation", "spring"],
+            "severity": "Critical",
+            "cwe": "CWE-384: Session Fixation",
+            "examples": {
+              "positive": [
+                {
+                  "code": "request.getSession().invalidate();\nrequest.getSession(true);",
+                  "description": "This compliant code invalidates the existing session and creates a new session during user authentication, preventing session fixation attacks."
+                },
+                {
+                  "code": "SecurityContextHolder.clearContext();\nrequest.getSession().invalidate();\nrequest.getSession(true);",
+                  "description": "This compliant code clears the security context, invalidates the existing session, and creates a new session during user authentication, preventing session fixation attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "request.getSession();",
+                  "description": "This code does not invalidate the existing session or create a new session during user authentication, which can lead to session fixation vulnerabilities.",
+                  "pattern": "request\\.getSession\\(\\)"
+                },
+                {
+                  "code": "// No session handling during authentication\nSecurityContextHolder.getContext().setAuthentication(authentication);",
+                  "description": "This code sets the authentication without handling session creation, leading to potential session fixation vulnerabilities."
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Invalidate the existing session during user authentication.",
+                "Create a new session after invalidating the existing session.",
+                "Ensure that any user-specific data is correctly transferred to the new session if needed."
+              ],
+              "examples": [
+                {
+                  "code": "request.getSession().invalidate();\nrequest.getSession(true);",
+                  "description": "This compliant solution invalidates the existing session and creates a new session during user authentication, preventing session fixation attacks."
+                },
+                {
+                  "code": "SecurityContextHolder.clearContext();\nrequest.getSession().invalidate();\nrequest.getSession(true);",
+                  "description": "This compliant solution clears the security context, invalidates the existing session, and creates a new session during user authentication, preventing session fixation attacks."
+                }
+              ]
+            },
+            "rationale": "Session fixation attacks exploit the way web applications manage session identifiers. By ensuring that a new session is created during user authentication, the application can prevent attackers from gaining unauthorized access through predetermined session identifiers. This approach protects user sessions from being hijacked and maintains the integrity and security of the application."
+          },          
+          {
+            "id": "java20",
+            "title": "JWT Should Be Signed and Verified with Strong Cipher Algorithms",
+            "description": "Detects instances where JSON Web Tokens (JWTs) are not signed with strong cipher algorithms or where signatures are not verified, leading to potential vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "jwt", "token", "encryption"],
+            "severity": "Critical",
+            "cwe": "CWE-347: Improper Verification of Cryptographic Signature",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String jwt = Jwts.builder()\n    .setSubject(\"user\")\n    .signWith(SignatureAlgorithm.HS256, key)\n    .compact();\n\nJwts.parser()\n    .setSigningKey(key)\n    .parseClaimsJws(jwt);",
+                  "description": "This compliant code signs the JWT using a strong cipher algorithm (HS256) and verifies the signature during parsing, preventing token forgery vulnerabilities."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String jwt = Jwts.builder()\n    .setSubject(\"user\")\n    .compact();\n\nJwts.parser()\n    .parseClaimsJws(jwt);",
+                  "description": "This code creates a JWT without signing it, which can lead to token forgery vulnerabilities as there is no signature to verify.",
+                  "pattern": "\\.compact\\(\\);"
+                },
+                {
+                  "code": "String jwt = Jwts.builder()\n    .setSubject(\"user\")\n    .signWith(SignatureAlgorithm.HS256, key)\n    .compact();\n\n// No verification\nClaims claims = Jwts.parser()\n    .parseClaimsJwt(jwt)\n    .getBody();",
+                  "description": "This code signs the JWT but does not verify the signature during parsing, which can lead to token forgery vulnerabilities.",
+                  "pattern": "\\.parseClaimsJwt\\("
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that all JWTs are signed using a strong cipher algorithm.",
+                "Verify the JWT signature during parsing to ensure the token's integrity.",
+                "Avoid using algorithms known to be weak or vulnerable (e.g., none, HS256 with weak keys)."
+              ],
+              "examples": [
+                {
+                  "code": "String jwt = Jwts.builder()\n    .setSubject(\"user\")\n    .signWith(SignatureAlgorithm.HS256, key)\n    .compact();\n\nJwts.parser()\n    .setSigningKey(key)\n    .parseClaimsJws(jwt);",
+                  "description": "This compliant solution signs the JWT using a strong cipher algorithm (HS256) and verifies the signature during parsing, ensuring token integrity."
+                }
+              ]
+            },
+            "rationale": "JSON Web Tokens (JWTs) are widely used for securely transmitting information between parties as a JSON object. When JWTs are not properly signed with strong cipher algorithms or if the signature is not verified, it allows attackers to craft fraudulent tokens and impersonate users. Ensuring that JWTs are signed and verified with robust algorithms protects against token forgery and maintains the security and integrity of user identities and data."
+          },
+          {
+            "id": "java21",
+            "title": "Cipher Algorithms Should Be Robust",
+            "description": "Detects instances where weak or insecure cipher algorithms are used for encryption, leading to potential vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "encryption", "cipher"],
+            "severity": "Critical",
+            "cwe": "CWE-326: Inadequate Encryption Strength",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"AES\");\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This compliant code uses the AES algorithm with CBC mode and PKCS5 padding, providing robust encryption."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"DES\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"DES\");\ncipher.init(Cipher.ENCRYPT_MODE, keySpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This code uses the DES algorithm, which is considered weak and insecure, making it vulnerable to attacks.",
+                  "pattern": "Cipher\\.getInstance\\(\"DES\"\\)"
+                },
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"Blowfish\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"Blowfish\");\ncipher.init(Cipher.ENCRYPT_MODE, keySpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This code uses the Blowfish algorithm, which is considered insecure for certain use cases.",
+                  "pattern": "Cipher\\.getInstance\\(\"Blowfish\"\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using weak or insecure cipher algorithms such as DES and Blowfish.",
+                "Use strong and secure cipher algorithms such as AES.",
+                "Ensure the cipher mode and padding are also robust (e.g., AES/CBC/PKCS5Padding)."
+              ],
+              "examples": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"AES\");\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This compliant solution uses the AES algorithm with CBC mode and PKCS5 padding, providing robust encryption."
+                }
+              ]
+            },
+            "rationale": "Encryption algorithms are essential for protecting sensitive information and ensuring secure communication. Using weak or insecure cipher algorithms can lead to the recovery of cleartext without prior knowledge of the key, making the encrypted data vulnerable to attacks. By using strong and secure cipher algorithms, the integrity and confidentiality of the encrypted data are maintained, protecting against data breaches and unauthorized access."
+          },
+          {
+            "id": "java22",
+            "title": "Encryption Algorithms Should Be Used with Secure Mode and Padding Scheme",
+            "description": "Detects instances where encryption algorithms are used with insecure modes or padding schemes, leading to potential vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "encryption", "cipher", "padding"],
+            "severity": "Critical",
+            "cwe": "CWE-329: Not Using a Random IV with CBC Mode",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"AES\");\nGCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);\ncipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This compliant code uses the AES algorithm with GCM mode and no padding, providing robust encryption with integrity protection."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/ECB/PKCS5Padding\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"AES\");\ncipher.init(Cipher.ENCRYPT_MODE, keySpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This code uses AES with ECB mode, which is insecure because it does not provide semantic security.",
+                  "pattern": "Cipher\\.getInstance\\(\"AES/ECB/PKCS5Padding\"\\)"
+                },
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"RSA/ECB/PKCS1Padding\");\nPublicKey publicKey = KeyFactory.getInstance(\"RSA\").generatePublic(new X509EncodedKeySpec(key));\ncipher.init(Cipher.ENCRYPT_MODE, publicKey);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This code uses RSA with PKCS1v1.5 padding, which is vulnerable to padding oracle attacks.",
+                  "pattern": "Cipher\\.getInstance\\(\"RSA/ECB/PKCS1Padding\"\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using insecure cipher modes such as ECB for encryption.",
+                "Use strong and secure modes such as GCM or CBC with a random IV.",
+                "Ensure the padding scheme is robust and secure (e.g., PKCS5Padding for symmetric encryption, OAEP for RSA)."
+              ],
+              "examples": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"AES\");\nGCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);\ncipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This compliant solution uses AES with GCM mode and no padding, providing robust encryption with integrity protection."
+                },
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nSecretKeySpec keySpec = new SecretKeySpec(key, \"AES\");\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);\nbyte[] encrypted = cipher.doFinal(plainText);",
+                  "description": "This compliant solution uses AES with CBC mode and PKCS5 padding, ensuring secure encryption with proper padding."
+                }
+              ]
+            },
+            "rationale": "Encryption algorithms are essential for protecting sensitive information and ensuring secure communication. Using insecure cipher modes or padding schemes can lead to the recovery of cleartext or manipulation of the encrypted data, making it vulnerable to attacks. By using strong and secure cipher modes and padding schemes, the integrity and confidentiality of the encrypted data are maintained, protecting against data breaches and unauthorized access."
+          },
+          {
+            "id": "java23",
+            "title": "Server Hostnames Should Be Verified During SSL/TLS Connections",
+            "description": "Detects instances where server hostnames are not verified during SSL/TLS connections, leading to potential vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "ssl", "tls", "hostname-verification"],
+            "severity": "Critical",
+            "cwe": "CWE-297: Improper Validation of Certificate with Host Mismatch",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, null, new SecureRandom());\nHttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());\nHttpsURLConnection connection = (HttpsURLConnection) new URL(\"https://example.com\").openConnection();\nconnection.setHostnameVerifier(new HostnameVerifier() {\n    @Override\n    public boolean verify(String hostname, SSLSession session) {\n        return HttpsURLConnection.getDefaultHostnameVerifier().verify(\"example.com\", session);\n    }\n});\nInputStream response = connection.getInputStream();",
+                  "description": "This compliant code sets up an SSL/TLS connection with hostname verification, ensuring the server's identity is validated."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new X509TrustManager() {\n    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }\n    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }\n    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }\n} }, new SecureRandom());\nHttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());\nHttpsURLConnection connection = (HttpsURLConnection) new URL(\"https://example.com\").openConnection();\nconnection.setHostnameVerifier((hostname, session) -> true);\nInputStream response = connection.getInputStream();",
+                  "description": "This code disables hostname verification by always returning true, making it vulnerable to man-in-the-middle attacks.",
+                  "pattern": "connection.setHostnameVerifier\\(\\(hostname, session\\) -> true\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure hostname verification is enabled and properly configured during SSL/TLS connections.",
+                "Avoid disabling hostname verification by setting it to always return true.",
+                "Use a proper hostname verifier that checks the server's identity against the expected hostname."
+              ],
+              "examples": [
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, null, new SecureRandom());\nHttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());\nHttpsURLConnection connection = (HttpsURLConnection) new URL(\"https://example.com\").openConnection();\nconnection.setHostnameVerifier(new HostnameVerifier() {\n    @Override\n    public boolean verify(String hostname, SSLSession session) {\n        return HttpsURLConnection.getDefaultHostnameVerifier().verify(\"example.com\", session);\n    }\n});\nInputStream response = connection.getInputStream();",
+                  "description": "This compliant solution sets up an SSL/TLS connection with hostname verification, ensuring the server's identity is validated."
+                }
+              ]
+            },
+            "rationale": "Transport Layer Security (TLS) provides secure communication between systems over the internet by encrypting the data sent between them. When hostname validation is disabled, the client skips a critical check that ensures the system is indeed the one it claims to be. This creates an opportunity for attackers to pose as a trusted entity, intercept, manipulate, or steal the data being transmitted. Enabling and properly configuring hostname verification adds an extra layer of trust and security to internet communication, protecting against identity spoofing and man-in-the-middle attacks."
+          },
+          {
+            "id": "java24",
+            "title": "Insecure Temporary File Creation Methods Should Not Be Used",
+            "description": "Detects instances where temporary files are created insecurely, leading to potential vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "intentionality", "cwe", "temporary-files", "file-creation"],
+            "severity": "Critical",
+            "cwe": "CWE-377: Insecure Temporary File",
+            "examples": {
+              "positive": [
+                {
+                  "code": "File tempFile = File.createTempFile(\"prefix\", \"suffix\");\ntry (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {\n    writer.write(\"temporary data\");\n}",
+                  "description": "This compliant code securely creates a temporary file using the `File.createTempFile` method, which ensures atomic file creation."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "File tempFile = new File(System.getProperty(\"java.io.tmpdir\"), \"tempfile.txt\");\nif (!tempFile.exists()) {\n    tempFile.createNewFile();\n}\ntry (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {\n    writer.write(\"temporary data\");\n}",
+                  "description": "This code creates a temporary file in a non-atomic way, introducing a race condition vulnerability.",
+                  "pattern": "new File\\(System\\.getProperty\\(\"java\\.io\\.tmpdir\"\\), \"[^\"]+\"\\)\\.createNewFile\\(\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid creating temporary files using normal file handling methods that are not atomic.",
+                "Use `File.createTempFile` for secure, atomic temporary file creation.",
+                "Ensure that temporary files are created with appropriate permissions and are securely deleted when no longer needed."
+              ],
+              "examples": [
+                {
+                  "code": "File tempFile = File.createTempFile(\"prefix\", \"suffix\");\ntry (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {\n    writer.write(\"temporary data\");\n}",
+                  "description": "This compliant solution uses the `File.createTempFile` method to securely create a temporary file, avoiding race condition issues."
+                }
+              ]
+            },
+            "rationale": "Temporary files are considered insecurely created when the file existence check is performed separately from the actual file creation. This can introduce race condition issues, allowing a third party to create a file between when the application chooses its name and when it creates it. This can lead to trust boundary issues, where an attacker can control the temporary file and modify it in ways that affect the application’s logic, potentially leading to sensitive information disclosure or further compromise of the application or hosting infrastructure. Using atomic methods such as `File.createTempFile` ensures secure temporary file creation, protecting against these vulnerabilities."
+          },
+          {
+            "id": "java25",
+            "title": "Passwords Should Not Be Stored in Plaintext or with Fast Hashing Algorithms",
+            "description": "Detects instances where passwords are stored in plaintext or using fast, insecure hashing algorithms, which pose significant security risks.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "password-storage", "cwe", "cryptography"],
+            "severity": "Critical",
+            "cwe": "CWE-257: Storing Passwords in a Recoverable Format",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());\nstorePassword(hashedPassword);",
+                  "description": "This compliant code securely hashes a password using BCrypt before storing it."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String plaintextPassword = \"userPassword\";\nstorePassword(plaintextPassword);",
+                  "description": "This code stores a password in plaintext, which is highly insecure.",
+                  "pattern": "storePassword\\(\"[^\"]+\"\\);"
+                },
+                {
+                  "code": "String hashedPassword = MD5.hash(password);\nstorePassword(hashedPassword);",
+                  "description": "This code uses MD5, a fast and insecure hashing algorithm, to hash the password.",
+                  "pattern": "MD5\\.hash\\([^\"]+\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid storing passwords in plaintext or with fast hashing algorithms like MD5 or SHA-1.",
+                "Use strong, slow hashing algorithms such as BCrypt, Argon2, or PBKDF2.",
+                "Ensure that password hashes are stored securely and that salts are used to prevent rainbow table attacks."
+              ],
+              "examples": [
+                {
+                  "code": "String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());\nstorePassword(hashedPassword);",
+                  "description": "This compliant solution uses BCrypt, a slow hashing algorithm, to securely hash and store a password."
+                }
+              ]
+            },
+            "rationale": "Storing passwords in plaintext or using fast hashing algorithms poses a significant security risk. If an attacker gains access to the stored passwords, they can easily retrieve and reuse them to gain unauthorized access to user accounts, leading to potential malicious activities such as identity theft, data breaches, or financial fraud. Using strong, slow hashing algorithms ensures that even if the password storage is compromised, the passwords are not easily recoverable, thereby mitigating the risk of unauthorized access."
+          },
+          {
+            "id": "java26",
+            "title": "Server Certificates Should Be Verified During SSL/TLS Connections",
+            "description": "Detects instances where SSL/TLS connections are made without verifying the server certificates, which can lead to critical security vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "ssl", "tls", "certificate-validation", "cwe", "privacy"],
+            "severity": "Critical",
+            "cwe": "CWE-295: Improper Certificate Validation",
+            "examples": {
+              "positive": [
+                {
+                  "code": "HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());\nconnection.setHostnameVerifier(HTTPSURLConnection.getDefaultHostnameVerifier());",
+                  "description": "This compliant code properly sets up SSL/TLS connections with certificate validation and hostname verification."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setHostnameVerifier((hostname, session) -> true);",
+                  "description": "This code disables hostname verification, allowing any server certificate to be accepted, which is insecure.",
+                  "pattern": "setHostnameVerifier\\(\\(hostname, session\\) -> true\\);"
+                },
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new X509TrustManager() {\n    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }\n    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) { }\n    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) { }\n} }, new java.security.SecureRandom());",
+                  "description": "This code uses a TrustManager that doesn't validate server certificates, which is insecure.",
+                  "pattern": "new X509TrustManager\\(\\) \\{.*checkServerTrusted\\(java\\.security\\.cert\\.X509Certificate\\[\\] certs, String authType\\) \\{ \\}\\}.*\\}"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that SSL/TLS connections are made with server certificate validation enabled.",
+                "Use a proper TrustManager that validates the server's certificate chain.",
+                "Avoid disabling hostname verification; instead, use a strict HostnameVerifier that ensures the hostname matches the certificate."
+              ],
+              "examples": [
+                {
+                  "code": "HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());\nconnection.setHostnameVerifier(HTTPSURLConnection.getDefaultHostnameVerifier());",
+                  "description": "This compliant solution ensures that SSL/TLS connections validate server certificates and verify the hostname."
+                }
+              ]
+            },
+            "rationale": "Disabling server certificate validation in SSL/TLS connections undermines the security of encrypted communications. Without proper validation, attackers can perform man-in-the-middle attacks, intercepting and potentially altering sensitive data. Ensuring that server certificates are validated is essential to maintaining the trust and integrity of secure communications over the internet."
+          },
+          {
+            "id": "java27",
+            "title": "Persistent Entities Should Not Be Used as Arguments of '@RequestMapping' Methods",
+            "description": "Detects instances where persistent entities are used as method arguments in '@RequestMapping' methods, which can lead to mass assignment vulnerabilities and unauthorized modifications of entity states.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "spring", "cwe", "mass-assignment", "request-mapping"],
+            "severity": "Critical",
+            "cwe": "CWE-915: Improper Update of Associative Array (Object) Elements",
+            "examples": {
+              "positive": [
+                {
+                  "code": "@RequestMapping(value = \"/updateUser\", method = RequestMethod.POST)\npublic String updateUser(@RequestBody UserDTO userDto) {\n    User user = userService.findUserById(userDto.getId());\n    user.setName(userDto.getName());\n    userService.saveUser(user);\n    return \"User updated successfully\";\n}",
+                  "description": "This compliant code uses a Data Transfer Object (DTO) instead of a persistent entity to accept user input, reducing the risk of mass assignment."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "@RequestMapping(value = \"/updateUser\", method = RequestMethod.POST)\npublic String updateUser(@RequestBody User user) {\n    userService.saveUser(user);\n    return \"User updated successfully\";\n}",
+                  "description": "This code uses a persistent entity as a method argument, which can lead to mass assignment vulnerabilities and unauthorized modifications.",
+                  "pattern": "@RequestMapping.*\\(.*\\)\\npublic.*\\(@RequestBody.*\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using persistent entities as arguments in '@RequestMapping' methods.",
+                "Use Data Transfer Objects (DTOs) to encapsulate and validate incoming data before applying it to persistent entities.",
+                "Manually map the fields from the DTO to the persistent entity to ensure only intended properties are modified."
+              ],
+              "examples": [
+                {
+                  "code": "@RequestMapping(value = \"/updateUser\", method = RequestMethod.POST)\npublic String updateUser(@RequestBody UserDTO userDto) {\n    User user = userService.findUserById(userDto.getId());\n    user.setName(userDto.getName());\n    userService.saveUser(user);\n    return \"User updated successfully\";\n}",
+                  "description": "This compliant solution uses a DTO to handle user input, reducing the risk of mass assignment attacks."
+                }
+              ]
+            },
+            "rationale": "Using persistent entities as arguments in '@RequestMapping' methods can expose your application to mass assignment attacks, where attackers could manipulate object properties directly through crafted HTTP requests. By utilizing DTOs and manually mapping fields to persistent entities, you can ensure that only the intended properties are modified, thus protecting the application's integrity and security."
+          },
+          {
+            "id": "java28",
+            "title": "HttpSecurity URL Patterns Should Be Correctly Ordered",
+            "description": "Detects instances where URL patterns in Spring Security's HttpSecurity configuration are incorrectly ordered, which can lead to critical security vulnerabilities such as authentication bypass and privilege escalation.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "spring", "cwe", "url-pattern", "access-control"],
+            "severity": "Critical",
+            "cwe": "CWE-284: Improper Access Control",
+            "examples": {
+              "positive": [
+                {
+                  "code": "http\n    .authorizeRequests()\n    .antMatchers(\"/admin/example/**\").hasRole(\"ADMIN\")\n    .antMatchers(\"/admin/**\").authenticated()\n    .antMatchers(\"/public/**\").permitAll();",
+                  "description": "This compliant code ensures that stricter URL patterns are defined before more general ones, enforcing correct access control."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "http\n    .authorizeRequests()\n    .antMatchers(\"/admin/**\").authenticated()\n    .antMatchers(\"/admin/example/**\").hasRole(\"ADMIN\")\n    .antMatchers(\"/public/**\").permitAll();",
+                  "description": "This code incorrectly orders the URL patterns, placing a more general pattern before a stricter one, which may lead to a security vulnerability.",
+                  "pattern": "antMatchers\\(\"/admin/\\*\\*\"\\).authenticated\\(\\).*antMatchers\\(\"/admin/example/\\*\\*\"\\).hasRole\\(\"ADMIN\"\\);"
+                },
+                {
+                  "code": "http\n    .authorizeRequests()\n    .antMatchers(\"/page*/**\").authenticated()\n    .antMatchers(\"/page-index/db\").permitAll();",
+                  "description": "This code defines a more general URL pattern before a more specific one, potentially allowing unauthorized access.",
+                  "pattern": "antMatchers\\(\"/page\\*/\\*\\*\"\\).authenticated\\(\\).*antMatchers\\(\"/page-index/db\"\\).permitAll\\(\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that URL patterns in the HttpSecurity configuration are ordered from the most specific to the least specific.",
+                "Avoid placing more general patterns before stricter ones, as this may cause the stricter rules to be ignored.",
+                "Review and test the URL pattern order to confirm that all intended access control rules are correctly enforced."
+              ],
+              "examples": [
+                {
+                  "code": "http\n    .authorizeRequests()\n    .antMatchers(\"/admin/example/**\").hasRole(\"ADMIN\")\n    .antMatchers(\"/admin/**\").authenticated()\n    .antMatchers(\"/public/**\").permitAll();",
+                  "description": "This compliant solution ensures that stricter access control rules are applied first by correctly ordering the URL patterns."
+                }
+              ]
+            },
+            "rationale": "In Spring Security, the order of URL patterns in the HttpSecurity configuration is crucial to ensuring that access control rules are applied correctly. Incorrect ordering can lead to critical vulnerabilities, such as authentication bypass or privilege escalation, where more general rules override stricter ones, potentially exposing sensitive parts of the application to unauthorized access. By ordering URL patterns correctly, you ensure that all intended security measures are effectively enforced."
+          },
+          {
+            "id": "java29",
+            "title": "LDAP Connections Should Be Authenticated",
+            "description": "Detects instances where LDAP connections are configured without proper authentication, leading to critical security vulnerabilities such as unauthorized access, sensitive information leakage, and authentication bypass.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "ldap", "cwe", "authentication"],
+            "severity": "Critical",
+            "cwe": "CWE-287: Improper Authentication",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Hashtable<String, String> env = new Hashtable<>();\nenv.put(Context.INITIAL_CONTEXT_FACTORY, \"com.sun.jndi.ldap.LdapCtxFactory\");\nenv.put(Context.PROVIDER_URL, \"ldap://localhost:389\");\nenv.put(Context.SECURITY_AUTHENTICATION, \"simple\");\nenv.put(Context.SECURITY_PRINCIPAL, \"cn=admin,dc=example,dc=com\");\nenv.put(Context.SECURITY_CREDENTIALS, \"password\");\nDirContext ctx = new InitialDirContext(env);",
+                  "description": "This compliant code establishes an LDAP connection using Name/Password Authentication, ensuring that the connection is properly authenticated."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Hashtable<String, String> env = new Hashtable<>();\nenv.put(Context.INITIAL_CONTEXT_FACTORY, \"com.sun.jndi.ldap.LdapCtxFactory\");\nenv.put(Context.PROVIDER_URL, \"ldap://localhost:389\");\nenv.put(Context.SECURITY_AUTHENTICATION, \"none\");\nDirContext ctx = new InitialDirContext(env);",
+                  "description": "This code configures an LDAP connection with no authentication, which is insecure and should be avoided.",
+                  "pattern": "env\\.put\\(Context\\.SECURITY_AUTHENTICATION, \"none\"\\);"
+                },
+                {
+                  "code": "Hashtable<String, String> env = new Hashtable<>();\nenv.put(Context.INITIAL_CONTEXT_FACTORY, \"com.sun.jndi.ldap.LdapCtxFactory\");\nenv.put(Context.PROVIDER_URL, \"ldap://localhost:389\");\nenv.put(Context.SECURITY_AUTHENTICATION, \"simple\");\nenv.put(Context.SECURITY_PRINCIPAL, \"\");\nenv.put(Context.SECURITY_CREDENTIALS, \"\");\nDirContext ctx = new InitialDirContext(env);",
+                  "description": "This code uses unauthenticated Name/Password Authentication, which allows connections without proper credentials.",
+                  "pattern": "env\\.put\\(Context\\.SECURITY_PRINCIPAL, \"\"\\);.*env\\.put\\(Context\\.SECURITY_CREDENTIALS, \"\"\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that LDAP connections are configured with proper authentication mechanisms, such as Name/Password Authentication.",
+                "Avoid using 'Anonymous' or 'Unauthenticated' authentication mechanisms for LDAP connections.",
+                "Use secure authentication credentials and ensure they are stored securely to prevent unauthorized access."
+              ],
+              "examples": [
+                {
+                  "code": "Hashtable<String, String> env = new Hashtable<>();\nenv.put(Context.INITIAL_CONTEXT_FACTORY, \"com.sun.jndi.ldap.LdapCtxFactory\");\nenv.put(Context.PROVIDER_URL, \"ldap://localhost:389\");\nenv.put(Context.SECURITY_AUTHENTICATION, \"simple\");\nenv.put(Context.SECURITY_PRINCIPAL, \"cn=admin,dc=example,dc=com\");\nenv.put(Context.SECURITY_CREDENTIALS, \"password\");\nDirContext ctx = new InitialDirContext(env);",
+                  "description": "This compliant solution uses Name/Password Authentication to ensure the LDAP connection is properly authenticated."
+                }
+              ]
+            },
+            "rationale": "LDAP connections that are not authenticated pose a significant security risk, allowing unauthorized users to access or modify sensitive directory data. By enforcing proper authentication mechanisms, such as Name/Password Authentication, you protect the integrity and confidentiality of the data stored in the directory. This reduces the risk of authentication bypass, sensitive information leaks, and other security breaches."
+          },
+          {
+            "id": "java30",
+            "title": "Cryptographic Keys Should Be Robust",
+            "description": "Detects instances where cryptographic keys are used in an insecure or weak manner, leading to critical security vulnerabilities such as plaintext recovery, data breaches, and compliance violations.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "cryptography", "cwe", "privacy", "key-management"],
+            "severity": "Critical",
+            "cwe": "CWE-326: Inadequate Encryption Strength",
+            "examples": {
+              "positive": [
+                {
+                  "code": "KeyGenerator keyGen = KeyGenerator.getInstance(\"AES\");\nkeyGen.init(256); // Use 256-bit key length\nSecretKey secretKey = keyGen.generateKey();",
+                  "description": "This compliant code generates a robust 256-bit AES key, ensuring strong encryption."
+                },
+                {
+                  "code": "KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(\"RSA\");\nkeyPairGen.initialize(2048); // Use 2048-bit key length\nKeyPair keyPair = keyPairGen.generateKeyPair();",
+                  "description": "This compliant code generates a robust 2048-bit RSA key pair, ensuring strong encryption."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "KeyGenerator keyGen = KeyGenerator.getInstance(\"AES\");\nkeyGen.init(64); // Insecure key length\nSecretKey secretKey = keyGen.generateKey();",
+                  "description": "This code generates a weak 64-bit AES key, which is insecure and vulnerable to attacks.",
+                  "pattern": "keyGen\\.init\\(\\d{1,2}\\);"
+                },
+                {
+                  "code": "KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(\"RSA\");\nkeyPairGen.initialize(512); // Insecure key length\nKeyPair keyPair = keyPairGen.generateKeyPair();",
+                  "description": "This code generates a weak 512-bit RSA key pair, which is insecure and vulnerable to attacks.",
+                  "pattern": "keyPairGen\\.initialize\\(512\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that cryptographic keys are generated with adequate key lengths according to current security standards.",
+                "For AES, use key lengths of at least 128 bits, but 256 bits is recommended.",
+                "For RSA, use key lengths of at least 2048 bits, but 3072 bits or higher is recommended for long-term security.",
+                "Regularly review and update key management practices to comply with evolving cryptographic standards."
+              ],
+              "examples": [
+                {
+                  "code": "KeyGenerator keyGen = KeyGenerator.getInstance(\"AES\");\nkeyGen.init(256); // Use 256-bit key length\nSecretKey secretKey = keyGen.generateKey();",
+                  "description": "This compliant solution generates a robust 256-bit AES key, ensuring strong encryption."
+                },
+                {
+                  "code": "KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(\"RSA\");\nkeyPairGen.initialize(2048); // Use 2048-bit key length\nKeyPair keyPair = keyPairGen.generateKeyPair();",
+                  "description": "This compliant solution generates a robust 2048-bit RSA key pair, ensuring strong encryption."
+                }
+              ]
+            },
+            "rationale": "Using weak or insecure cryptographic keys undermines the strength of encryption, exposing sensitive data to potential attacks that could recover plaintext. Robust key lengths are essential to maintaining the security of cryptographic operations and protecting against data breaches, unauthorized access, and compliance violations. Adhering to current cryptographic standards ensures that encrypted data remains secure against evolving threats."
+          },
+          {
+            "id": "java31",
+            "title": "Weak SSL/TLS Protocols Should Not Be Used",
+            "description": "Detects instances where weak or deprecated SSL/TLS protocols are used, leading to critical security vulnerabilities such as plaintext recovery, data breaches, and compliance violations.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "ssl", "tls", "cryptography", "cwe", "privacy"],
+            "severity": "Critical",
+            "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.2\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This compliant code uses TLSv1.2, which is considered secure and recommended for use."
+                },
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.3\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This compliant code uses TLSv1.3, which is the latest and most secure version of the TLS protocol."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"SSLv3\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This code uses SSLv3, a deprecated and insecure protocol that is vulnerable to various attacks.",
+                  "pattern": "SSLContext\\.getInstance\\(\"SSLv3\"\\);"
+                },
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.0\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This code uses TLSv1.0, a deprecated protocol that is considered weak and insecure.",
+                  "pattern": "SSLContext\\.getInstance\\(\"TLSv1\\.0\"\\);"
+                },
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.1\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This code uses TLSv1.1, a deprecated protocol that is considered weak and insecure.",
+                  "pattern": "SSLContext\\.getInstance\\(\"TLSv1\\.1\"\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using deprecated SSL protocols such as SSLv3 and TLS versions 1.0 and 1.1.",
+                "Use secure versions of TLS, such as TLSv1.2 or TLSv1.3, which are currently recommended by the cryptographic community.",
+                "Review and update existing code to replace any instances of weak SSL/TLS protocols with more secure alternatives.",
+                "Regularly review and update SSL/TLS configurations to ensure they meet current security standards."
+              ],
+              "examples": [
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.2\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This compliant solution uses TLSv1.2, which is considered secure and recommended for use."
+                },
+                {
+                  "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.3\");\nsslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());",
+                  "description": "This compliant solution uses TLSv1.3, which is the latest and most secure version of the TLS protocol."
+                }
+              ]
+            },
+            "rationale": "Using weak or deprecated SSL/TLS protocols undermines the security of encrypted communications, exposing sensitive data to potential attacks that could recover plaintext. Adhering to current cryptographic standards by using secure TLS versions like TLSv1.2 or TLSv1.3 ensures that encrypted data remains protected against evolving threats, thereby safeguarding confidentiality, privacy, and integrity."
+          },
+          {
+            "id": "java32",
+            "title": "SecureRandom Seeds Should Not Be Predictable",
+            "description": "Detects instances where the SecureRandom class is improperly seeded with predictable values, leading to critical security vulnerabilities such as insecure cryptographic keys, session hijacking, and other cryptographic attacks.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "cryptography", "cwe", "cert", "pitfall"],
+            "severity": "Critical",
+            "cwe": "CWE-337: Predictable Seed in Pseudo-Random Number Generator (PRNG)",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SecureRandom secureRandom = new SecureRandom();\nbyte[] randomBytes = new byte[16];\nsecureRandom.nextBytes(randomBytes);",
+                  "description": "This compliant code uses SecureRandom without specifying a seed, ensuring that it is seeded with a sufficiently unpredictable value."
+                },
+                {
+                  "code": "SecureRandom secureRandom = SecureRandom.getInstanceStrong();\nbyte[] randomBytes = new byte[16];\nsecureRandom.nextBytes(randomBytes);",
+                  "description": "This compliant code uses SecureRandom.getInstanceStrong() to ensure a strong source of randomness, without relying on predictable seeds."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "SecureRandom secureRandom = new SecureRandom(new byte[]{1, 2, 3, 4});\nbyte[] randomBytes = new byte[16];\nsecureRandom.nextBytes(randomBytes);",
+                  "description": "This code uses a predictable seed (a static byte array), which undermines the security of the generated random numbers.",
+                  "pattern": "new SecureRandom\\(new byte\\[\\].*\\);"
+                },
+                {
+                  "code": "SecureRandom secureRandom = new SecureRandom();\nsecureRandom.setSeed(12345L);\nbyte[] randomBytes = new byte[16];\nsecureRandom.nextBytes(randomBytes);",
+                  "description": "This code sets a predictable long seed, making the output of SecureRandom predictable and insecure.",
+                  "pattern": "secureRandom\\.setSeed\\(\\d+L\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using predictable seeds when initializing SecureRandom or calling its setSeed() method.",
+                "Do not explicitly seed SecureRandom unless you are certain that the seed source is sufficiently unpredictable.",
+                "Use SecureRandom without specifying a seed to allow the JVM to provide a cryptographically secure, random seed.",
+                "For critical cryptographic operations, consider using SecureRandom.getInstanceStrong() to ensure that the most secure random number generator available is used."
+              ],
+              "examples": [
+                {
+                  "code": "SecureRandom secureRandom = new SecureRandom();\nbyte[] randomBytes = new byte[16];\nsecureRandom.nextBytes(randomBytes);",
+                  "description": "This compliant solution uses SecureRandom without specifying a seed, ensuring that the seed is sufficiently unpredictable."
+                },
+                {
+                  "code": "SecureRandom secureRandom = SecureRandom.getInstanceStrong();\nbyte[] randomBytes = new byte[16];\nsecureRandom.nextBytes(randomBytes);",
+                  "description": "This compliant solution uses SecureRandom.getInstanceStrong(), ensuring the strongest possible random number generator is used."
+                }
+              ]
+            },
+            "rationale": "Using predictable seeds with SecureRandom undermines the security of cryptographic operations, as the resulting random numbers can be predicted by an attacker. This can lead to severe security vulnerabilities such as compromised cryptographic keys, session tokens, and other sensitive data. Ensuring that SecureRandom is properly seeded with a strong, unpredictable value is essential to maintaining the integrity and security of cryptographic systems."
+          },
+          {
+            "id": "java33",
+            "title": "Cipher Block Chaining IVs Should Be Unpredictable",
+            "description": "Detects instances where CBC mode encryption is used with predictable Initialization Vectors (IVs), leading to critical security vulnerabilities such as plaintext recovery and other cryptographic attacks.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "cryptography", "cwe", "privacy", "encryption"],
+            "severity": "Critical",
+            "cwe": "CWE-329: Not Using a Random IV with CBC Mode",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nSecureRandom secureRandom = new SecureRandom();\nbyte[] iv = new byte[cipher.getBlockSize()];\nsecureRandom.nextBytes(iv);\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);",
+                  "description": "This compliant code generates a random IV using SecureRandom, ensuring that the IV is unpredictable and secure."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nbyte[] iv = new byte[cipher.getBlockSize()];\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);",
+                  "description": "This code uses a default zero-filled IV, which is predictable and undermines the security of CBC encryption.",
+                  "pattern": "new IvParameterSpec\\(new byte\\[.*\\]\\);"
+                },
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nbyte[] iv = key.getEncoded();\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);",
+                  "description": "This code derives the IV directly from the encryption key, making the IV predictable and insecure.",
+                  "pattern": "new IvParameterSpec\\(key\\.getEncoded\\(\\)\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that the IV used in CBC mode encryption is generated using a secure random number generator such as SecureRandom.",
+                "Avoid using predictable values such as zero-filled arrays or key-derived values as IVs.",
+                "Always generate a new, random IV for each encryption operation to ensure that ciphertexts remain secure and do not reveal patterns.",
+                "Consider using secure encryption modes that do not require an IV, such as Galois/Counter Mode (GCM), if appropriate for your use case."
+              ],
+              "examples": [
+                {
+                  "code": "Cipher cipher = Cipher.getInstance(\"AES/CBC/PKCS5Padding\");\nSecureRandom secureRandom = new SecureRandom();\nbyte[] iv = new byte[cipher.getBlockSize()];\nsecureRandom.nextBytes(iv);\nIvParameterSpec ivSpec = new IvParameterSpec(iv);\ncipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);",
+                  "description": "This compliant solution uses SecureRandom to generate an unpredictable IV, ensuring the security of the CBC encryption."
+                }
+              ]
+            },
+            "rationale": "Using predictable IVs in CBC mode encryption severely weakens the security of the encryption process, as it allows attackers to detect patterns and potentially recover the plaintext. By ensuring that IVs are generated using a secure, unpredictable source of randomness, you protect the confidentiality and integrity of encrypted data, thereby preventing cryptographic attacks and data breaches."
+          },
+          {
+            "id": "java34",
+            "title": "Basic Authentication Should Not Be Used",
+            "description": "Detects instances where Basic Authentication is used, leading to critical security vulnerabilities such as interception of credentials, session hijacking, and brute-force attacks.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "authentication", "cwe", "privacy", "cert"],
+            "severity": "Critical",
+            "cwe": "CWE-319: Cleartext Transmission of Sensitive Information",
+            "examples": {
+              "positive": [
+                {
+                  "code": "HttpClient client = HttpClient.newBuilder().build();\nHttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create(\"https://example.com/protected\"))\n    .header(\"Authorization\", \"Bearer \" + accessToken)\n    .build();\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());",
+                  "description": "This compliant code uses Bearer Token Authentication instead of Basic Authentication, providing a more secure alternative."
+                },
+                {
+                  "code": "HttpClient client = HttpClient.newBuilder().build();\nHttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create(\"https://example.com/protected\"))\n    .header(\"Authorization\", \"Digest username=\"user\", realm=\"example.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/protected\", response=\"6629fae49393a05397450978507c4ef1\")\")\n    .build();\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());",
+                  "description": "This compliant code uses Digest Authentication instead of Basic Authentication, which is more secure and protects against replay attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "HttpClient client = HttpClient.newBuilder().build();\nHttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create(\"https://example.com/protected\"))\n    .header(\"Authorization\", \"Basic dXNlcm5hbWU6cGFzc3dvcmQ=\")\n    .build();\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());",
+                  "description": "This code uses Basic Authentication, which is insecure as it transmits credentials in Base64 encoded form, vulnerable to interception.",
+                  "pattern": "header\\(\"Authorization\", \"Basic .*\"\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using Basic Authentication for securing HTTP requests.",
+                "Use more secure alternatives such as OAuth (Bearer Token) Authentication, Digest Authentication, or other mechanisms that do not transmit credentials in plain text.",
+                "Ensure all authentication mechanisms are used over HTTPS to protect the integrity and confidentiality of transmitted data.",
+                "Consider implementing multi-factor authentication to further secure user accounts and sensitive operations."
+              ],
+              "examples": [
+                {
+                  "code": "HttpClient client = HttpClient.newBuilder().build();\nHttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create(\"https://example.com/protected\"))\n    .header(\"Authorization\", \"Bearer \" + accessToken)\n    .build();\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());",
+                  "description": "This compliant solution uses Bearer Token Authentication, which is more secure than Basic Authentication and avoids transmitting sensitive information in plain text."
+                }
+              ]
+            },
+            "rationale": "Basic Authentication transmits user credentials in a format that is easy to intercept and decode, making it a poor choice for secure communication. Using more secure authentication methods, such as OAuth or Digest Authentication, helps protect sensitive information from being exposed to unauthorized parties, thereby mitigating the risk of session hijacking, brute-force attacks, and other security vulnerabilities."
+          },
+          {
+            "id": "java35",
+            "title": "HttpServletRequest.getRequestedSessionId() Should Not Be Used",
+            "description": "Detects instances where HttpServletRequest.getRequestedSessionId() is used, which can lead to critical security vulnerabilities such as session fixation, impersonation, and unauthorized access.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "session", "cwe", "session fixation", "impersonation"],
+            "severity": "Critical",
+            "cwe": "CWE-384: Session Fixation",
+            "examples": {
+              "positive": [
+                {
+                  "code": "HttpSession session = request.getSession();\nif (session != null && session.getId().equals(request.getRequestedSessionId())) {\n    // Handle authenticated session\n} else {\n    // Redirect to login or handle unauthenticated session\n}",
+                  "description": "This compliant code checks if the session ID provided by the client matches the current valid session ID, mitigating the risk of session fixation."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String sessionId = request.getRequestedSessionId();\nHttpSession session = request.getSession(sessionId != null);",
+                  "description": "This code directly uses the session ID provided by the client without validation, which is vulnerable to session fixation attacks.",
+                  "pattern": "getRequestedSessionId\\(\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using HttpServletRequest.getRequestedSessionId() directly to manage sessions.",
+                "Always validate that the session ID provided by the client matches the current valid session ID before using it.",
+                "Consider using HttpSession's getId() method to manage sessions securely.",
+                "Implement additional security measures, such as regenerating session IDs after authentication to prevent session fixation attacks."
+              ],
+              "examples": [
+                {
+                  "code": "HttpSession session = request.getSession();\nif (session != null && session.getId().equals(request.getRequestedSessionId())) {\n    // Handle authenticated session\n} else {\n    // Redirect to login or handle unauthenticated session\n}",
+                  "description": "This compliant solution ensures that the session ID provided by the client is valid and matches the current session, thereby preventing unauthorized access through session fixation."
+                }
+              ]
+            },
+            "rationale": "Using the client-supplied session ID without validation can expose the application to session fixation attacks, where an attacker manipulates the session ID to impersonate a legitimate user. Ensuring that the session ID matches the server-generated session ID helps mitigate these risks and protects user sessions from being hijacked."
+          },          
+          {
+            "id": "java36",
+            "title": "Regular Expressions Should Not Be Vulnerable to Denial of Service Attacks",
+            "description": "Detects instances where regular expressions are used in a way that can lead to Denial of Service (DoS) attacks due to catastrophic backtracking, caused by regex injection.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "regex", "cwe", "denial-of-service", "injection"],
+            "severity": "Critical",
+            "cwe": "CWE-400: Uncontrolled Resource Consumption ('Denial of Service')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Pattern safePattern = Pattern.compile(\"^[a-zA-Z0-9]+$\");\nMatcher matcher = safePattern.matcher(userInput);\nif (matcher.matches()) {\n    // Process the input\n}",
+                  "description": "This compliant code uses a simple, safe regex pattern that avoids catastrophic backtracking, ensuring efficient and secure processing of user input."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "Pattern vulnerablePattern = Pattern.compile(\"(a+)+$\");\nMatcher matcher = vulnerablePattern.matcher(userInput);\nif (matcher.matches()) {\n    // Process the input\n}",
+                  "description": "This code uses a regex pattern that is vulnerable to catastrophic backtracking, which can lead to a denial of service if exploited with malicious input.",
+                  "pattern": "Pattern\\.compile\\(\".*\\(.*\\+.*\\)\\+.*\"\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using complex regex patterns that are prone to catastrophic backtracking.",
+                "Simplify regex patterns where possible to eliminate nested quantifiers that can cause exponential time complexity.",
+                "Use atomic groups or possessive quantifiers to prevent backtracking where complex patterns are necessary.",
+                "Implement input validation and sanitization to prevent untrusted data from being used in regex patterns.",
+                "Consider using alternative methods for string matching where the risk of regex DoS attacks is high."
+              ],
+              "examples": [
+                {
+                  "code": "Pattern safePattern = Pattern.compile(\"(?>a+)+$\");\nMatcher matcher = safePattern.matcher(userInput);\nif (matcher.matches()) {\n    // Process the input\n}",
+                  "description": "This compliant solution uses an atomic group in the regex pattern, preventing catastrophic backtracking and reducing the risk of denial of service attacks."
+                }
+              ]
+            },
+            "rationale": "Regular expressions that are vulnerable to catastrophic backtracking can be exploited by attackers to cause denial of service by consuming excessive computational resources. Simplifying regex patterns and using safer constructs help mitigate this risk, ensuring that the application remains resilient against DoS attacks."
+          },
+          {
+            "id": "java37",
+            "title": "Password Hashing Functions Should Use an Unpredictable Salt",
+            "description": "Detects instances where password hashing functions are used without a secure, unpredictable salt, increasing the risk of password hash collisions and brute-force attacks.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "password", "cwe", "salt", "hashing"],
+            "severity": "Critical",
+            "cwe": "CWE-760: Use of a One-Way Hash without a Salt",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SecureRandom random = new SecureRandom();\nbyte[] salt = new byte[16];\nrandom.nextBytes(salt);\nKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);\nSecretKeyFactory factory = SecretKeyFactory.getInstance(\"PBKDF2WithHmacSHA1\");\nbyte[] hash = factory.generateSecret(spec).getEncoded();",
+                  "description": "This compliant code securely generates a random salt and uses it with a key derivation function to hash the password, ensuring that each password hash is unique."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "MessageDigest md = MessageDigest.getInstance(\"SHA-256\");\nmd.update(password.getBytes());\nbyte[] hash = md.digest();",
+                  "description": "This code hashes the password without using a salt, making it vulnerable to rainbow table attacks and hash collisions.",
+                  "pattern": "MessageDigest\\.(?!.*update\\(.*\\).*(salt|random)).*digest\\(.*\\);"
+                },
+                {
+                  "code": "String salt = \"1234\";\nKeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 128);\nSecretKeyFactory factory = SecretKeyFactory.getInstance(\"PBKDF2WithHmacSHA1\");\nbyte[] hash = factory.generateSecret(spec).getEncoded();",
+                  "description": "This code uses a hardcoded salt, which is predictable and compromises the security of the password hashes.",
+                  "pattern": "new PBEKeySpec\\(.*(\"[^\"]+\").*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that all password hashing functions use a cryptographically secure, random salt that is unique for each user.",
+                "Avoid using hardcoded or predictable salts in password hashing functions.",
+                "Use key derivation functions such as PBKDF2, bcrypt, scrypt, or Argon2, which are designed to be computationally intensive and include secure salt generation.",
+                "Store the salt alongside the hashed password in the database so that it can be used during password verification."
+              ],
+              "examples": [
+                {
+                  "code": "SecureRandom random = new SecureRandom();\nbyte[] salt = new byte[16];\nrandom.nextBytes(salt);\nKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);\nSecretKeyFactory factory = SecretKeyFactory.getInstance(\"PBKDF2WithHmacSHA1\");\nbyte[] hash = factory.generateSecret(spec).getEncoded();",
+                  "description": "This compliant solution uses a securely generated random salt with a key derivation function, ensuring that password hashes are unique and resistant to pre-computed attacks."
+                }
+              ]
+            },
+            "rationale": "Using a unique, unpredictable salt for each password hash is essential for protecting against rainbow table attacks, hash collisions, and other forms of brute-force attacks. Secure salts ensure that even if two users have the same password, their hashes will be different, increasing the overall security of the stored credentials."
+          },
+          {
+            "id": "java38",
+            "title": "Accessing Files Should Not Lead to Filesystem Oracle Attacks",
+            "description": "Detects instances where file access may expose the application to filesystem oracle attacks, enabling attackers to infer the existence of files and gather sensitive information.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "file access", "cwe", "injection", "filesystem oracle"],
+            "severity": "Major",
+            "cwe": "CWE-538: File and Directory Information Exposure",
+            "examples": {
+              "positive": [
+                {
+                  "code": "File file = new File(\"/safe/directory\", userInput);\nif (file.exists() && !file.isDirectory()) {\n    // Process the file securely\n}",
+                  "description": "This compliant code safely handles file access by controlling the directory and validating the file's existence without exposing filesystem details."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "File file = new File(userInput);\nif (file.exists()) {\n    // Process the file\n}",
+                  "description": "This code allows the user to influence the file path directly, making the application vulnerable to filesystem oracle attacks by revealing the existence of files based on user input.",
+                  "pattern": "new File\\(.*\\);\\s*if\\s*\\(.*\\.exists\\(\\)\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid allowing user input to directly influence file paths, especially when using relative paths or filenames.",
+                "Implement strict validation and sanitization of user inputs before using them in file operations.",
+                "Use predefined directories and control access to them, ensuring that users can only access files within allowed paths.",
+                "Consider using a whitelist of allowed filenames or paths to restrict access to specific resources.",
+                "Ensure that the application does not disclose whether a file exists or not, based on user input. Instead, return generic error messages for unauthorized access attempts."
+              ],
+              "examples": [
+                {
+                  "code": "File baseDirectory = new File(\"/safe/directory\");\nFile file = new File(baseDirectory, userInput);\nif (file.exists() && file.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath()) && !file.isDirectory()) {\n    // Process the file securely\n} else {\n    // Return a generic error message\n}",
+                  "description": "This compliant solution restricts file access to a specific directory, ensuring that user input cannot be used to access unauthorized files and avoiding filesystem oracle attacks."
+                }
+              ]
+            },
+            "rationale": "Filesystem oracle vulnerabilities can allow attackers to gather information about the system by determining whether specific files or directories exist. By restricting user input, validating paths, and avoiding disclosing filesystem details, applications can prevent attackers from exploiting this vulnerability to gather sensitive information or escalate attacks."
+          },
+          {
+            "id": "java39",
+            "title": "Environment Variables Should Not Be Defined from Untrusted Input",
+            "description": "Detects instances where environment variables are set or modified using untrusted input, which can lead to critical security vulnerabilities such as code execution, data leakage, or denial of service.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "environment variables", "cwe", "injection", "sans-top25"],
+            "severity": "Major",
+            "cwe": "CWE-20: Improper Input Validation",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String safeValue = sanitizeInput(userInput);\nSystem.setProperty(\"MY_ENV_VAR\", safeValue);",
+                  "description": "This compliant code sanitizes the user input before using it to set an environment variable, reducing the risk of injection attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "System.setProperty(\"MY_ENV_VAR\", userInput);",
+                  "description": "This code directly uses untrusted user input to set an environment variable, making the application vulnerable to environment variable injection attacks.",
+                  "pattern": "System\\.setProperty\\(.*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using untrusted input to set or modify environment variables.",
+                "Implement strict input validation and sanitization to ensure that any data used in environment variables is safe and expected.",
+                "Use whitelists or predefined values where possible, rather than allowing arbitrary user input to influence environment variables.",
+                "Ensure that environment variables related to sensitive operations, such as `PATH`, `LD_PRELOAD`, or authentication tokens, are never set based on user input."
+              ],
+              "examples": [
+                {
+                  "code": "String safeValue = sanitizeInput(userInput);\nif (isValidEnvironmentValue(safeValue)) {\n    System.setProperty(\"MY_ENV_VAR\", safeValue);\n}",
+                  "description": "This compliant solution includes input sanitization and validation before setting the environment variable, reducing the risk of injection and ensuring that only safe values are used."
+                }
+              ]
+            },
+            "rationale": "Allowing untrusted input to define or modify environment variables can expose the application to a variety of attacks, including code execution, data leakage, and denial of service. By enforcing strict validation and sanitization of inputs, and avoiding the use of untrusted data in sensitive environment variables, applications can mitigate these risks and maintain security integrity."
+          },
+          {
+            "id": "java40",
+            "title": "XML Operations Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where XML content is generated or manipulated using untrusted input, which can lead to security vulnerabilities such as information disclosure, request tampering, or remote code execution.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "xml", "cwe", "injection"],
+            "severity": "Major",
+            "cwe": "CWE-611: Improper Restriction of XML External Entity Reference",
+            "examples": {
+              "positive": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\ndbf.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\ndbf.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new InputSource(new StringReader(safeXmlContent)));",
+                  "description": "This compliant code disables external entities and other risky XML features, reducing the risk of XML injection attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String xml = \"<user>\" + userInput + \"</user>\";\nDocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new InputSource(new StringReader(xml)));",
+                  "description": "This code constructs an XML document directly from untrusted user input without any validation or sanitization, making it vulnerable to XML injection attacks.",
+                  "pattern": "\"<.*>\"\\s*\\+\\s*.*userInput\\s*\\+\\s*\"</.*>\""
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid constructing XML documents directly from untrusted input without proper validation and sanitization.",
+                "Use secure XML parsers and libraries that disable potentially harmful features, such as external entities or DTDs.",
+                "Validate and sanitize any input that will be included in an XML document to ensure it does not contain malicious content.",
+                "Consider using a whitelist approach to define what constitutes acceptable XML content, ensuring that only expected and safe structures are allowed.",
+                "Use escaping functions to encode any special characters in user input before including it in XML content."
+              ],
+              "examples": [
+                {
+                  "code": "String safeUserInput = sanitizeInput(userInput);\nString xml = \"<user>\" + safeUserInput + \"</user>\";\nDocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new InputSource(new StringReader(xml)));",
+                  "description": "This compliant solution sanitizes user input and configures the XML parser to disable risky features, reducing the risk of XML injection attacks."
+                }
+              ]
+            },
+            "rationale": "XML injection vulnerabilities can allow attackers to manipulate XML documents in ways that can lead to information disclosure, unauthorized actions, or even code execution. By properly sanitizing input, using secure XML parsers, and disabling risky XML features, applications can mitigate these risks and maintain the integrity and security of XML operations."
+          },
+          {
+            "id": "java41",
+            "title": "JSON Operations Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where JSON content is generated or manipulated using untrusted input, which can lead to security vulnerabilities such as information disclosure, privilege escalation, or remote code execution.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "json", "cwe", "injection"],
+            "severity": "Major",
+            "cwe": "CWE-915: Improperly Controlled Modification of Dynamically-Determined Object Attributes",
+            "examples": {
+              "positive": [
+                {
+                  "code": "JsonObject jsonObject = Json.createObjectBuilder()\n    .add(\"username\", sanitizeInput(userInput))\n    .add(\"role\", \"user\")\n    .build();",
+                  "description": "This compliant code sanitizes the user input before adding it to a JSON object, reducing the risk of JSON injection attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String jsonString = \"{\"username\": \"\" + userInput + \"}\";\nJsonObject jsonObject = Json.createReader(new StringReader(jsonString)).readObject();",
+                  "description": "This code constructs a JSON object directly from untrusted user input without any validation or sanitization, making it vulnerable to JSON injection attacks.",
+                  "pattern": "\"\\{\".*\\+\\s*userInput\\s*\\+.*\"\\}\""
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid constructing JSON objects directly from untrusted input without proper validation and sanitization.",
+                "Use secure JSON libraries that automatically escape special characters and provide input validation.",
+                "Validate and sanitize any input that will be included in a JSON object to ensure it does not contain malicious content.",
+                "Consider using a whitelist approach to define what constitutes acceptable JSON keys and values, ensuring that only expected and safe structures are allowed.",
+                "Use escaping functions to encode any special characters in user input before including it in JSON content."
+              ],
+              "examples": [
+                {
+                  "code": "String safeUserInput = sanitizeInput(userInput);\nJsonObject jsonObject = Json.createObjectBuilder()\n    .add(\"username\", safeUserInput)\n    .add(\"role\", \"user\")\n    .build();",
+                  "description": "This compliant solution sanitizes user input before including it in a JSON object, reducing the risk of JSON injection attacks."
+                }
+              ]
+            },
+            "rationale": "JSON injection vulnerabilities can allow attackers to manipulate JSON objects in ways that can lead to information disclosure, privilege escalation, or even remote code execution. By properly sanitizing input, using secure JSON libraries, and validating all data before it is included in JSON objects, applications can mitigate these risks and maintain the integrity and security of JSON operations."
+          },
+          {
+            "id": "java42",
+            "title": "XML Signatures Should Be Validated Securely",
+            "description": "Detects instances where XML signatures are used without proper validation, which can lead to security vulnerabilities such as data tampering, information disclosure, or unauthorized access.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "xml", "cwe", "signature", "validation"],
+            "severity": "Major",
+            "cwe": "CWE-347: Improper Verification of Cryptographic Signature",
+            "examples": {
+              "positive": [
+                {
+                  "code": "XMLSignatureFactory factory = XMLSignatureFactory.getInstance(\"DOM\");\nDOMValidateContext context = new DOMValidateContext(publicKey, signatureElement);\ncontext.setProperty(\"org.jcp.xml.dsig.secureValidation\", Boolean.TRUE);\nXMLSignature signature = factory.unmarshalXMLSignature(context);\nboolean valid = signature.validate(context);",
+                  "description": "This compliant code securely validates an XML signature by enabling secure validation mode, reducing the risk of signature forgery or manipulation."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "XMLSignatureFactory factory = XMLSignatureFactory.getInstance(\"DOM\");\nDOMValidateContext context = new DOMValidateContext(publicKey, signatureElement);\nXMLSignature signature = factory.unmarshalXMLSignature(context);\nboolean valid = signature.validate(context);",
+                  "description": "This code validates an XML signature without enabling secure validation mode, making it vulnerable to signature manipulation and other attacks.",
+                  "pattern": "XMLSignatureFactory\\.getInstance\\(\"DOM\"\\).*\\.validate\\(.*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Enable secure validation mode by setting the `org.jcp.xml.dsig.secureValidation` property to `true` in the validation context.",
+                "Ensure that the validation context is configured correctly to prevent bypassing of critical security checks.",
+                "Regularly update your Java runtime to benefit from the latest security improvements related to XML signature validation.",
+                "Consider implementing additional checks on the XML document's structure and content to ensure it hasn't been tampered with before signature validation."
+              ],
+              "examples": [
+                {
+                  "code": "XMLSignatureFactory factory = XMLSignatureFactory.getInstance(\"DOM\");\nDOMValidateContext context = new DOMValidateContext(publicKey, signatureElement);\ncontext.setProperty(\"org.jcp.xml.dsig.secureValidation\", Boolean.TRUE);\nXMLSignature signature = factory.unmarshalXMLSignature(context);\nboolean valid = signature.validate(context);",
+                  "description": "This compliant solution enables secure validation mode and configures the validation context to ensure the XML signature is validated securely."
+                }
+              ]
+            },
+            "rationale": "Improper validation of XML signatures can expose the application to various security risks, including data tampering and unauthorized access. Enabling secure validation mode and properly configuring the validation context helps ensure that XML signatures are validated correctly, preserving the integrity and authenticity of XML documents."
+          },
+          {
+            "id": "java43",
+            "title": "XML Parsers Should Not Be Vulnerable to Denial of Service Attacks",
+            "description": "Detects instances where XML parsers are used without proper configurations to prevent Denial of Service (DoS) attacks, which can lead to system unavailability or be leveraged in amplification attacks.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "xml", "cwe", "denial-of-service", "amplification"],
+            "severity": "Major",
+            "cwe": "CWE-776: Improper Restriction of XML External Entity Reference",
+            "examples": {
+              "positive": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\ndbf.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\ndbf.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\ndbf.setFeature(\"http://javax.xml.XMLConstants/feature/secure-processing\", true);\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new InputSource(new StringReader(xmlContent)));",
+                  "description": "This compliant code configures the XML parser to disable features that could lead to Denial of Service attacks, ensuring secure processing of XML content."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new InputSource(new StringReader(xmlContent)));",
+                  "description": "This code uses an XML parser without disabling features that could lead to Denial of Service attacks, making it vulnerable to such attacks.",
+                  "pattern": "DocumentBuilderFactory\\.newInstance\\(\\)\\s*;\\s*DocumentBuilder\\s*db\\s*=\\s*dbf\\.newDocumentBuilder\\(\\)\\s*;\\s*db\\.parse\\(.*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Configure XML parsers to disable features that can be exploited in Denial of Service attacks, such as DTD processing and external entity resolution.",
+                "Enable secure processing mode by setting appropriate features in the XML parser configuration.",
+                "Validate and sanitize any input XML data before processing it, ensuring it conforms to expected structures and does not contain malicious payloads.",
+                "Regularly update XML parser libraries to ensure they include the latest security patches and improvements."
+              ],
+              "examples": [
+                {
+                  "code": "DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\ndbf.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\ndbf.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\ndbf.setFeature(\"http://javax.xml.XMLConstants/feature/secure-processing\", true);\nDocumentBuilder db = dbf.newDocumentBuilder();\nDocument doc = db.parse(new InputSource(new StringReader(xmlContent)));",
+                  "description": "This compliant solution configures the XML parser to mitigate the risk of Denial of Service attacks by disabling risky features and enabling secure processing."
+                }
+              ]
+            },
+            "rationale": "XML parsers that are not properly configured can be exploited by attackers to perform Denial of Service (DoS) attacks, leading to system unavailability and potential amplification attacks. By configuring XML parsers securely and disabling risky features, applications can mitigate these risks and ensure reliable XML processing."
+          },
+          {
+            "id": "java44",
+            "title": "Mobile Database Encryption Keys Should Not Be Hardcoded",
+            "description": "Detects instances where encryption keys for mobile databases are hardcoded in the application, which can lead to unauthorized access to sensitive data if the key is discovered by an attacker.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "android", "encryption", "cwe"],
+            "severity": "Major",
+            "cwe": "CWE-312: Cleartext Storage of Sensitive Information",
+            "examples": {
+              "positive": [
+                {
+                  "code": "KeyStore keyStore = KeyStore.getInstance(\"AndroidKeyStore\");\nkeyStore.load(null);\nSecretKey secretKey = ((KeyStore.SecretKeyEntry) keyStore.getEntry(\"my_key_alias\", null)).getSecretKey();\nCipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");\ncipher.init(Cipher.ENCRYPT_MODE, secretKey);\nbyte[] encryptedData = cipher.doFinal(dataToEncrypt);",
+                  "description": "This compliant code retrieves the encryption key securely from the Android Keystore, rather than hardcoding it, ensuring that the key remains protected."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String encryptionKey = \"myHardcodedKey123\";\nCipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");\nSecretKeySpec keySpec = new SecretKeySpec(encryptionKey.getBytes(), \"AES\");\ncipher.init(Cipher.ENCRYPT_MODE, keySpec);\nbyte[] encryptedData = cipher.doFinal(dataToEncrypt);",
+                  "description": "This code example shows an encryption key that is hardcoded, making it vulnerable to extraction by attackers. The use of hardcoded keys in mobile apps should be avoided.",
+                  "pattern": "new SecretKeySpec\\(.*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Do not hardcode encryption keys in the application's source code or binary.",
+                "Use secure key management systems, such as the Android Keystore system, to generate, store, and retrieve encryption keys.",
+                "Ensure that the encryption key is unique per user or session, and is securely retrieved at runtime.",
+                "Review and audit the codebase regularly to detect and remove any instances of hardcoded keys."
+              ],
+              "examples": [
+                {
+                  "code": "KeyStore keyStore = KeyStore.getInstance(\"AndroidKeyStore\");\nkeyStore.load(null);\nSecretKey secretKey = ((KeyStore.SecretKeyEntry) keyStore.getEntry(\"my_key_alias\", null)).getSecretKey();\nCipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");\ncipher.init(Cipher.ENCRYPT_MODE, secretKey);\nbyte[] encryptedData = cipher.doFinal(dataToEncrypt);",
+                  "description": "This compliant solution uses the Android Keystore to securely handle encryption keys, reducing the risk of key exposure."
+                }
+              ]
+            },
+            "rationale": "Hardcoding encryption keys in mobile applications is a major security risk, as it allows attackers who gain access to the application's binary to easily extract the keys and decrypt sensitive data. By using secure key management practices, such as storing keys in the Android Keystore, applications can protect user data more effectively."
+          },
+          {
+            "id": "java45",
+            "title": "Session Cookies Should Not Be Created From Untrusted Input",
+            "description": "Detects instances where session cookies are created using untrusted input, which can lead to security vulnerabilities such as session hijacking or sensitive data disclosure.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "injection", "cwe", "cookies", "web"],
+            "severity": "Major",
+            "cwe": "CWE-602: Client-Side Enforcement of Server-Side Security",
+            "examples": {
+              "positive": [
+                {
+                  "code": "HttpSession session = request.getSession(true);\nString sessionId = session.getId();\nCookie sessionCookie = new Cookie(\"JSESSIONID\", sessionId);\nresponse.addCookie(sessionCookie);",
+                  "description": "This compliant code securely creates a session cookie using the session ID generated by the server, ensuring that the session cookie is not influenced by untrusted input."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String injectedCookie = request.getParameter(\"cookie\");\nCookie sessionCookie = new Cookie(\"JSESSIONID\", injectedCookie);\nresponse.addCookie(sessionCookie);",
+                  "description": "This code example shows a session cookie being created using untrusted input from a request parameter, which could be manipulated by an attacker to hijack sessions or inject malicious content.",
+                  "pattern": "new Cookie\\(\"JSESSIONID\",.*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Never create session cookies using untrusted data such as GET or POST parameters, query strings, or any user-controlled input.",
+                "Always use server-generated session identifiers when creating session cookies.",
+                "Validate and sanitize any input data before using it within the application, especially if it is involved in session management or cookie creation.",
+                "Implement server-side session management controls to ensure that session cookies cannot be tampered with or injected by malicious actors."
+              ],
+              "examples": [
+                {
+                  "code": "HttpSession session = request.getSession(true);\nString sessionId = session.getId();\nCookie sessionCookie = new Cookie(\"JSESSIONID\", sessionId);\nresponse.addCookie(sessionCookie);",
+                  "description": "This compliant solution ensures that session cookies are generated securely on the server side and are not influenced by any untrusted input, protecting against session injection attacks."
+                }
+              ]
+            },
+            "rationale": "Session cookies are critical for maintaining user sessions in web applications. Creating these cookies from untrusted input can lead to severe security vulnerabilities, including session hijacking and sensitive data disclosure. By ensuring that session cookies are created securely and are not influenced by untrusted data, applications can protect user sessions and sensitive information from attackers."
+          },
+          {
+            "id": "java46",
+            "title": "Reflection Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where reflection is used in a way that could allow an attacker to inject and execute arbitrary code, leading to potential security vulnerabilities such as remote code execution.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "injection", "cwe", "reflection", "java"],
+            "severity": "Major",
+            "cwe": "CWE-470: Use of Externally-Controlled Input to Select Classes or Code ('Unsafe Reflection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "Class<?> clazz = Class.forName(\"com.example.MySafeClass\");\nMethod method = clazz.getMethod(\"mySafeMethod\");\nObject result = method.invoke(clazz.newInstance());",
+                  "description": "This compliant code uses a hardcoded class name and method, preventing user-controlled input from influencing the reflection process."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String className = request.getParameter(\"class\");\nClass<?> clazz = Class.forName(className);\nMethod method = clazz.getMethod(\"execute\");\nObject result = method.invoke(clazz.newInstance());",
+                  "description": "This code example shows how user-controlled input can be used in reflection, allowing an attacker to specify arbitrary classes and methods, leading to potential remote code execution.",
+                  "pattern": "Class\\.forName\\(.*request\\.getParameter\\(.*\\)\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user-controlled input to select classes or methods for reflection.",
+                "If reflection must be used, ensure that the input is validated against a whitelist of known-safe classes and methods.",
+                "Use hardcoded class names and methods whenever possible to avoid reliance on external input.",
+                "Regularly audit and review code that uses reflection to ensure it is not vulnerable to injection attacks."
+              ],
+              "examples": [
+                {
+                  "code": "Class<?> clazz = Class.forName(\"com.example.MySafeClass\");\nMethod method = clazz.getMethod(\"mySafeMethod\");\nObject result = method.invoke(clazz.newInstance());",
+                  "description": "This compliant solution hardcodes the class name and method, ensuring that reflection is not vulnerable to external manipulation."
+                }
+              ]
+            },
+            "rationale": "Reflection is a powerful feature in Java that allows for dynamic code execution. However, when used with untrusted input, it can lead to severe security vulnerabilities, such as remote code execution. By controlling and validating input used in reflection, applications can prevent attackers from injecting malicious code and compromising the system."
+          },
+          {
+            "id": "java47",
+            "title": "Authorizations Should Be Based on Strong Decisions",
+            "description": "Detects instances where authorizations are not enforced based on strong decisions, potentially allowing unauthorized access to sensitive resources and functionalities within an application.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "authorization", "cwe", "access-control", "java"],
+            "severity": "Major",
+            "cwe": "CWE-285: Improper Authorization",
+            "examples": {
+              "positive": [
+                {
+                  "code": "if (user.hasRole(\"ADMIN\")) {\n    grantAccessToResource();\n} else {\n    denyAccess();\n}",
+                  "description": "This compliant code ensures that access to the resource is granted only if the user has the correct role, enforcing strong authorization decisions."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "grantAccessToResource();",
+                  "description": "This code example demonstrates an improper authorization check where access is granted without validating the user's role or privileges, leading to potential unauthorized access.",
+                  "pattern": "grantAccessToResource\\(\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Always enforce role-based access control (RBAC) or another strong authorization mechanism to validate user permissions before granting access to sensitive resources.",
+                "Implement fine-grained access control, ensuring that access is granted based on user roles, privileges, and resource sensitivity.",
+                "Audit all access control mechanisms in the application to ensure they are consistently applied and properly configured.",
+                "Regularly review and update access control policies to align with evolving business requirements and security best practices."
+              ],
+              "examples": [
+                {
+                  "code": "if (user.hasRole(\"ADMIN\")) {\n    grantAccessToResource();\n} else {\n    denyAccess();\n}",
+                  "description": "This compliant solution uses role-based access control to ensure that only users with the appropriate roles can access sensitive resources, preventing unauthorized access."
+                }
+              ]
+            },
+            "rationale": "Proper authorization is crucial for maintaining the security and integrity of an application. Weak or improperly configured access control can lead to unauthorized access, data breaches, and other serious security issues. Ensuring that authorizations are based on strong, consistent decisions helps protect sensitive resources and maintain the application's overall security posture."
+          },
+          {
+            "id": "java48",
+            "title": "OpenSAML2 Should Be Configured to Prevent Authentication Bypass",
+            "description": "Detects instances where OpenSAML2 is not properly configured, potentially allowing attackers to manipulate SAML responses and bypass authentication mechanisms, leading to unauthorized access.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "authentication", "cwe", "saml", "spring"],
+            "severity": "Major",
+            "cwe": "CWE-347: Improper Verification of Cryptographic Signature",
+            "examples": {
+              "positive": [
+                {
+                  "code": "SAMLMessageContext context = new SAMLMessageContext();\n// Configuration and initialization of the context\nSignatureTrustEngine trustEngine = new ExplicitKeySignatureTrustEngine(credentialResolver, keyInfoResolver);\nSAMLSignatureProfileValidator signatureProfileValidator = new SAMLSignatureProfileValidator();\nsignatureProfileValidator.validate(context.getInboundSAMLMessage().getSignature());\nif (!trustEngine.validate(context.getInboundSAMLMessage().getSignature(), context.getPeerEntityMetadata())) {\n    throw new SecurityException(\"SAML response signature validation failed.\");\n}",
+                  "description": "This compliant code properly validates the SAML response signature using a SignatureTrustEngine, ensuring that the signature is trustworthy and preventing any authentication bypass."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "SAMLMessageContext context = new SAMLMessageContext();\n// Incomplete or improper validation of the SAML response\nSAMLSignatureProfileValidator signatureProfileValidator = new SAMLSignatureProfileValidator();\nsignatureProfileValidator.validate(context.getInboundSAMLMessage().getSignature());\n// No trust engine validation\n// Potential vulnerability: attackers could manipulate the response without proper validation.",
+                  "description": "This code example demonstrates a potential vulnerability where the SAML response signature is validated but not fully checked using a trust engine, leaving the application open to authentication bypass.",
+                  "pattern": "SAMLSignatureProfileValidator\\.validate\\(.*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that all SAML response signatures are validated using both a signature profile validator and a trust engine to confirm that the signature is both well-formed and trustworthy.",
+                "Configure OpenSAML2 to use a SignatureTrustEngine that is appropriate for your environment, such as ExplicitKeySignatureTrustEngine or PKIXSignatureTrustEngine.",
+                "Review and audit the configuration of OpenSAML2 regularly to ensure that all necessary validations are in place and functioning correctly.",
+                "Monitor and log any failed signature validations to detect potential attempts at bypassing authentication."
+              ],
+              "examples": [
+                {
+                  "code": "SAMLMessageContext context = new SAMLMessageContext();\nSignatureTrustEngine trustEngine = new ExplicitKeySignatureTrustEngine(credentialResolver, keyInfoResolver);\nSAMLSignatureProfileValidator signatureProfileValidator = new SAMLSignatureProfileValidator();\nsignatureProfileValidator.validate(context.getInboundSAMLMessage().getSignature());\nif (!trustEngine.validate(context.getInboundSAMLMessage().getSignature(), context.getPeerEntityMetadata())) {\n    throw new SecurityException(\"SAML response signature validation failed.\");\n}",
+                  "description": "This compliant solution ensures that SAML response signatures are properly validated using both a profile validator and a trust engine, preventing authentication bypass."
+                }
+              ]
+            },
+            "rationale": "OpenSAML2 is a crucial component in SSO systems, responsible for handling SAML assertions and ensuring that they are trustworthy. If SAML response signatures are not properly validated, attackers could manipulate the response to impersonate other users, leading to unauthorized access and potential compromise of sensitive systems. Properly configuring and validating SAML responses is essential for maintaining the security and integrity of the authentication process."
+          },
+          {
+            "id": "java49",
+            "title": "Server-Side Requests Should Not Be Vulnerable to Forging Attacks",
+            "description": "Detects instances where server-side requests are vulnerable to SSRF attacks, potentially allowing attackers to manipulate the server into making unauthorized requests on their behalf, leading to data disclosure, unauthorized actions, or further exploitation.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "injection", "ssrf", "cwe"],
+            "severity": "Major",
+            "cwe": "CWE-918: Server-Side Request Forgery (SSRF)",
+            "examples": {
+              "positive": [
+                {
+                  "code": "URL url = new URL(\"https://trustedserver.com/api/resource\");\nHttpURLConnection conn = (HttpURLConnection) url.openConnection();\nconn.setRequestMethod(\"GET\");\nconn.connect();",
+                  "description": "This compliant code makes a server-side request to a trusted and hardcoded URL, preventing user input from influencing the request and mitigating SSRF risks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String userInputUrl = request.getParameter(\"targetUrl\");\nURL url = new URL(userInputUrl);\nHttpURLConnection conn = (HttpURLConnection) url.openConnection();\nconn.setRequestMethod(\"GET\");\nconn.connect();",
+                  "description": "This code example demonstrates a potential SSRF vulnerability where user-controlled input is used to construct the URL for a server-side request, allowing attackers to manipulate the request and potentially perform unauthorized actions.",
+                  "pattern": "new URL\\(request\\.getParameter\\(\"targetUrl\"\\)\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using user-controlled input directly in server-side requests. Instead, use hardcoded or validated URLs.",
+                "If dynamic URLs are necessary, implement strict validation and whitelisting to ensure that only safe, intended URLs are allowed.",
+                "Restrict the protocols that can be used in URLs (e.g., allow only HTTP/HTTPS and disallow file, gopher, etc.).",
+                "Implement network-level protections such as firewalls and internal network segmentation to limit the impact of SSRF vulnerabilities.",
+                "Regularly audit and test the application for SSRF vulnerabilities using automated tools and manual code reviews."
+              ],
+              "examples": [
+                {
+                  "code": "String userInputUrl = request.getParameter(\"targetUrl\");\nif (isValidUrl(userInputUrl)) {\n    URL url = new URL(userInputUrl);\n    HttpURLConnection conn = (HttpURLConnection) url.openConnection();\n    conn.setRequestMethod(\"GET\");\n    conn.connect();\n} else {\n    throw new IllegalArgumentException(\"Invalid URL\");\n}",
+                  "description": "This compliant solution validates the user input against a list of allowed URLs or patterns before making a server-side request, reducing the risk of SSRF attacks."
+                }
+              ]
+            },
+            "rationale": "Server-Side Request Forgery (SSRF) vulnerabilities can lead to severe security risks, including unauthorized access, data leakage, and remote code execution. By ensuring that server-side requests are properly validated and controlled, applications can protect themselves against SSRF attacks and maintain the integrity of their systems."
+          },
+          {
+            "id": "java50",
+            "title": "OS Commands Should Not Be Vulnerable to Argument Injection Attacks",
+            "description": "Detects instances where arguments passed to OS commands are not properly sanitized or validated, potentially allowing attackers to inject malicious arguments, leading to unauthorized actions or command execution.",
+            "impact": "Minor",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "minor", "injection", "os-command", "cwe"],
+            "severity": "Minor",
+            "cwe": "CWE-88: Argument Injection or Modification",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String safeArg = sanitize(userInput);\nProcessBuilder pb = new ProcessBuilder(\"/usr/bin/safeCommand\", safeArg);\npb.start();",
+                  "description": "This compliant code sanitizes the user input before passing it as an argument to an OS command, reducing the risk of argument injection."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String userArg = request.getParameter(\"userArg\");\nProcessBuilder pb = new ProcessBuilder(\"/usr/bin/unsafeCommand\", userArg);\npb.start();",
+                  "description": "This code example demonstrates a potential argument injection vulnerability where untrusted user input is directly passed as an argument to an OS command, allowing attackers to manipulate the command's behavior.",
+                  "pattern": "new ProcessBuilder\\(.*request\\.getParameter\\(\".*\"\\)\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Never pass untrusted user input directly to OS command arguments. Always sanitize or validate the input before using it.",
+                "Use whitelisting to allow only safe and expected input values.",
+                "Consider using higher-level abstractions or libraries that do not require direct interaction with the OS shell to minimize the risk of injection.",
+                "Review and test all OS command invocations in the codebase to ensure they are not vulnerable to argument injection attacks."
+              ],
+              "examples": [
+                {
+                  "code": "String userArg = request.getParameter(\"userArg\");\nif (isValid(userArg)) {\n    ProcessBuilder pb = new ProcessBuilder(\"/usr/bin/safeCommand\", sanitize(userArg));\n    pb.start();\n} else {\n    throw new IllegalArgumentException(\"Invalid argument\");\n}",
+                  "description": "This compliant solution validates and sanitizes the user input before using it in an OS command, reducing the risk of argument injection."
+                }
+              ]
+            },
+            "rationale": "OS command argument injection vulnerabilities can allow attackers to manipulate the behavior of commands executed by the application, leading to unauthorized actions, data leaks, or even privilege escalation. By properly validating and sanitizing all arguments passed to OS commands, developers can mitigate these risks and ensure the security and integrity of their applications."
+          },
+          {
+            "id": "java51",
+            "title": "ActiveMQConnectionFactory Should Not Be Vulnerable to Malicious Code Deserialization",
+            "description": "Detects instances where ActiveMQConnectionFactory is used without proper type restrictions, potentially allowing attackers to force the deserialization of arbitrary objects, leading to deserialization injection attacks.",
+            "impact": "Minor",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "minor", "deserialization", "activemq", "cwe"],
+            "severity": "Minor",
+            "cwe": "CWE-502: Deserialization of Untrusted Data",
+            "examples": {
+              "positive": [
+                {
+                  "code": "ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();\nconnectionFactory.setTrustedPackages(Arrays.asList(\"com.example.safe\", \"org.example.safe\"));\nConnection connection = connectionFactory.createConnection();",
+                  "description": "This compliant code sets a list of trusted packages for deserialization, ensuring that only safe classes can be deserialized, thus preventing malicious deserialization attacks."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();\nConnection connection = connectionFactory.createConnection();\n// No restrictions on deserialization types",
+                  "description": "This code example demonstrates a potential vulnerability where no restrictions are placed on the types that can be deserialized by ActiveMQ, making it vulnerable to deserialization attacks.",
+                  "pattern": "new ActiveMQConnectionFactory\\(\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Always configure `ActiveMQConnectionFactory` to restrict the types that can be deserialized using `setTrustedPackages()`.",
+                "Use a whitelist approach where only known and safe packages are allowed for deserialization.",
+                "Regularly audit the trusted packages list to ensure it only includes safe and necessary classes.",
+                "Consider using alternative message formats (e.g., JSON or XML) that do not rely on Java serialization, to avoid deserialization issues altogether."
+              ],
+              "examples": [
+                {
+                  "code": "ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();\nconnectionFactory.setTrustedPackages(Arrays.asList(\"com.example.safe\", \"org.example.safe\"));\nConnection connection = connectionFactory.createConnection();",
+                  "description": "This compliant solution sets trusted packages for deserialization in ActiveMQ, reducing the risk of deserialization attacks by ensuring that only safe classes are allowed."
+                }
+              ]
+            },
+            "rationale": "Deserialization of untrusted data can lead to significant security vulnerabilities, including arbitrary code execution. By restricting the types that can be deserialized, applications using ActiveMQ can prevent attackers from exploiting deserialization vulnerabilities and maintain the integrity and security of their systems."
+          },
+          {
+            "id": "java52",
+            "title": "Logging Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where logging mechanisms are vulnerable to injection attacks, potentially allowing attackers to insert malicious or misleading content into log files, compromising the integrity of the logs.",
+            "impact": "Minor",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "minor", "injection", "logging", "cwe"],
+            "severity": "Minor",
+            "cwe": "CWE-117: Improper Output Neutralization for Logs",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String sanitizedInput = sanitizeInput(userInput);\nlogger.info(\"User input: \" + sanitizedInput);",
+                  "description": "This compliant code sanitizes the user input before logging it, ensuring that malicious content cannot be injected into the logs."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "logger.info(\"User input: \" + request.getParameter(\"userInput\"));",
+                  "description": "This code example demonstrates a potential vulnerability where untrusted user input is directly logged without sanitization, making the application vulnerable to log injection attacks.",
+                  "pattern": "logger\\.info\\(.*request\\.getParameter\\(\".*\"\\).*\\);"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Sanitize all untrusted input before logging it to ensure that special characters, such as newlines or log entry separators, are properly neutralized.",
+                "Implement input validation to allow only safe and expected input values.",
+                "Consider using structured logging formats (e.g., JSON) to minimize the impact of log injection attacks.",
+                "Regularly review and test logging mechanisms to ensure they are not vulnerable to injection attacks."
+              ],
+              "examples": [
+                {
+                  "code": "String userInput = request.getParameter(\"userInput\");\nString sanitizedInput = sanitizeInput(userInput);\nlogger.info(\"User input: \" + sanitizedInput);",
+                  "description": "This compliant solution sanitizes the user input before logging it, reducing the risk of log injection attacks by ensuring that malicious characters are properly neutralized."
+                }
+              ]
+            },
+            "rationale": "Logging is an essential part of monitoring and maintaining the security of an application. If logs are vulnerable to injection attacks, attackers can manipulate the logs to hide their activities or inject harmful data, potentially leading to further exploitation. By properly sanitizing and validating input before logging, developers can ensure that the integrity of the logs is maintained and that the application remains secure."
+          },
+          {
+            "id": "java53",
+            "title": "Exceptions Should Not Be Thrown from Servlet Methods",
+            "description": "Detects instances where exceptions are thrown directly from servlet methods, potentially leading to security vulnerabilities such as denial-of-service attacks and exposure of sensitive information. Exceptions should be handled within the servlet to ensure stability and prevent leaking sensitive information.",
+            "impact": "Minor",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "minor", "error-handling", "cwe", "cert"],
+            "severity": "Minor",
+            "cwe": "CWE-248: Uncaught Exception",
+            "examples": {
+              "positive": [
+                {
+                  "code": "try {\n    // Servlet logic\n} catch (IOException | ServletException e) {\n    logError(e);\n    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, \"An unexpected error occurred\");\n}",
+                  "description": "This compliant code catches and handles exceptions within the servlet, converting them into user-friendly error messages and preventing the servlet container from handling them."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {\n    // Servlet logic\n}",
+                  "description": "This code example demonstrates a potential vulnerability where exceptions are thrown directly from the servlet method, allowing them to propagate to the servlet container, which could lead to security issues.",
+                  "pattern": "throws IOException, ServletException"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Catch exceptions within the servlet method and handle them appropriately to prevent them from propagating to the servlet container.",
+                "Convert exceptions into meaningful and user-friendly error messages or HTTP error codes.",
+                "Log exceptions securely without exposing sensitive information, ensuring that error messages do not leak details about the application's internals.",
+                "Consider implementing a centralized error-handling mechanism to manage exceptions consistently across the application."
+              ],
+              "examples": [
+                {
+                  "code": "try {\n    // Servlet logic\n} catch (IOException | ServletException e) {\n    logError(e);\n    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, \"An unexpected error occurred\");\n}",
+                  "description": "This compliant solution catches and handles exceptions within the servlet, preventing them from propagating to the servlet container and converting them into user-friendly error messages."
+                }
+              ]
+            },
+            "rationale": "Uncaught exceptions in servlets can lead to security vulnerabilities, such as denial-of-service attacks and the exposure of sensitive information. By catching and handling exceptions within the servlet, developers can maintain the application's security and stability, ensuring that errors are managed gracefully and securely."
+          },
+          {
+            "id": "java54",
+            "title": "HTTP Response Headers Should Not Be Vulnerable to Injection Attacks",
+            "description": "Detects instances where HTTP response headers are constructed using unvalidated, user-provided data, potentially allowing attackers to manipulate critical headers or craft malformed HTTP responses. It is crucial to validate all user inputs against a whitelist to prevent such vulnerabilities.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "injection", "cwe", "cert"],
+            "severity": "Critical",
+            "cwe": "CWE-113: Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {\n    String value = req.getParameter(\"value\");\n\n    String whitelist = \"safevalue1 safevalue2\";\n    if (!whitelist.contains(value))\n        throw new IOException();\n\n    resp.addHeader(\"X-Header\", value); // Compliant\n}",
+                  "description": "This compliant code example shows how to properly validate user input against a whitelist before adding it to an HTTP response header."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {\n    String value = req.getParameter(\"value\");\n    resp.addHeader(\"X-Header\", value); // Noncompliant\n}",
+                  "description": "This noncompliant code example demonstrates the potential vulnerability where user-provided data is directly included in an HTTP response header without validation, making it susceptible to injection attacks.",
+                  "pattern": "resp.addHeader\\(\"[^\"]+\", req\\.getParameter\\(\"[^\"]+\"\\)\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Always validate user-provided data against a whitelist of safe values before including it in an HTTP response header.",
+                "Ensure that no untrusted input is directly included in HTTP headers.",
+                "Consider using well-established libraries or frameworks that automatically handle header construction securely.",
+                "Regularly update and audit whitelists to ensure they remain secure and effective."
+              ],
+              "examples": [
+                {
+                  "code": "protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {\n    String value = req.getParameter(\"value\");\n\n    String whitelist = \"safevalue1 safevalue2\";\n    if (!whitelist.contains(value))\n        throw new IOException();\n\n    resp.addHeader(\"X-Header\", value); // Compliant\n}",
+                  "description": "This compliant solution ensures that only validated, whitelisted values are used in HTTP response headers, mitigating the risk of injection attacks."
+                }
+              ]
+            },
+            "rationale": "User-provided data should always be considered untrusted. Constructing HTTP response headers based on such data without proper validation can expose the application to injection attacks, such as HTTP response splitting or smuggling, which can have severe security implications. By validating inputs against a whitelist, developers can prevent such vulnerabilities and protect the application's integrity."
+          },
+          {
+            "id": "java55",
+            "title": "Classes Should Not Be Loaded Dynamically",
+            "description": "Detects instances where classes are loaded dynamically using methods like `Class.forName`, which could allow malicious code to be executed through a static class initializer. Dynamic class loading poses significant security risks, as it can introduce vulnerabilities without explicit instantiation or method invocation.",
+            "impact": "Critical",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "critical", "dynamic-loading", "cwe", "cert"],
+            "severity": "Critical",
+            "cwe": "CWE-470: Use of Externally-Controlled Input to Select Classes or Code ('Unsafe Reflection')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "String className = \"com.example.MySafeClass\";\nClass<?> clazz = MySafeClass.class; // Compliant",
+                  "description": "This compliant code example shows how to load classes statically, ensuring that only safe and predefined classes are used."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "String className = System.getProperty(\"messageClassName\");\nClass<?> clazz = Class.forName(className);  // Noncompliant",
+                  "description": "This noncompliant code example demonstrates a security vulnerability where user-controlled input is used to dynamically load a class, potentially leading to the execution of malicious code.",
+                  "pattern": "Class\\.forName\\(System\\.getProperty\\(\"[^\"]+\"\\)\\)"
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Avoid using dynamic class loading whenever possible. Prefer static class loading methods like `MyClass.class`.",
+                "If dynamic class loading is necessary, ensure that the input is strictly validated against a whitelist of known and safe class names.",
+                "Consider using dependency injection frameworks to manage class loading and instantiation securely.",
+                "Regularly review and audit the codebase for instances of dynamic class loading to identify and mitigate potential security risks."
+              ],
+              "examples": [
+                {
+                  "code": "String className = \"com.example.MySafeClass\";\nClass<?> clazz = MySafeClass.class; // Compliant",
+                  "description": "This compliant solution uses static class loading, ensuring that the class to be loaded is safe and known at compile time, thus mitigating the risk of executing malicious code."
+                }
+              ]
+            },
+            "rationale": "Dynamic class loading can introduce serious security vulnerabilities, as it allows the execution of potentially malicious code without explicit instantiation or method invocation. By avoiding dynamic class loading and validating all inputs, developers can protect the application from such risks and ensure that only safe and expected classes are loaded."
+          },
+          {
+            "id": "java56",
+            "title": "XML Parsers Should Not Load External Schemas",
+            "description": "Detects instances where XML parsers are configured to load external schemas or DTDs, which can lead to server-side request forgery (SSRF) vulnerabilities. By default, XML processors attempt to load these external resources, potentially from untrusted sources, which can introduce significant security risks if not properly controlled.",
+            "impact": "Major",
+            "category": "Security",
+            "tags": ["security", "vulnerability", "major", "xml", "ssrf", "cwe", "cert"],
+            "severity": "Major",
+            "cwe": "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')",
+            "examples": {
+              "positive": [
+                {
+                  "code": "DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);",
+                  "description": "This compliant code example disables the loading of external DTDs, ensuring that the XML parser does not attempt to load potentially untrusted external schemas."
+                },
+                {
+                  "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);",
+                  "description": "This compliant solution prevents the SAX parser from loading external DTDs, mitigating the risk of SSRF attacks."
+                },
+                {
+                  "code": "SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);\nschemaFactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);",
+                  "description": "This example shows how to configure the SchemaFactory to prevent loading of external DTDs, thereby securing the XML parsing process."
+                }
+              ],
+              "negative": [
+                {
+                  "code": "DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();\nfactory.setValidating(true); // Noncompliant\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", true); // Noncompliant",
+                  "description": "This noncompliant code example demonstrates the potential vulnerability where the XML parser is configured to validate against external DTDs, which can lead to SSRF vulnerabilities."
+                },
+                {
+                  "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setValidating(true); // Noncompliant\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", true); // Noncompliant",
+                  "description": "This code shows a noncompliant use of SAXParserFactory where external DTDs are loaded, introducing a security risk."
+                },
+                {
+                  "code": "SAXReader xmlReader = new SAXReader();\nxmlReader.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", true); // Noncompliant",
+                  "description": "This example uses Dom4j with a noncompliant configuration that allows loading of external DTDs, making the application vulnerable to SSRF attacks."
+                },
+                {
+                  "code": "SAXBuilder builder = new SAXBuilder();\nbuilder.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", true); // Noncompliant",
+                  "description": "This noncompliant example shows Jdom2 configured to load external DTDs, leading to a potential security vulnerability."
+                }
+              ]
+            },
+            "fix": {
+              "steps": [
+                "Ensure that XML parsers are configured to disable the loading of external DTDs or schemas by setting the appropriate features to `false`.",
+                "Where necessary, use an `EntityResolver` to control and limit access to external entities.",
+                "Review and update the codebase to ensure that all XML processing configurations adhere to secure practices, particularly regarding external resources.",
+                "Consider using XML libraries that are secure by default, or ensure that all necessary security configurations are applied."
+              ],
+              "examples": [
+                {
+                  "code": "DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);",
+                  "description": "This compliant solution configures the XML parser to prevent the loading of external DTDs, mitigating potential security risks."
+                },
+                {
+                  "code": "SAXBuilder builder = new SAXBuilder();\nbuilder.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);",
+                  "description": "This example shows the correct configuration for Jdom2 to avoid loading external DTDs, enhancing security."
+                }
+              ]
+            },
+            "rationale": "XML parsers that are configured to load external schemas or DTDs can introduce serious security vulnerabilities, such as server-side request forgery (SSRF) attacks. By disabling this behavior, developers can protect their applications from potential exploitation and ensure that XML processing is conducted in a secure manner."
+          }
+    ]
+}
