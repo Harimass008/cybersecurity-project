@@ -1,0 +1,451 @@
+
+
+{
+    "rules": [
+{
+    "id": "CS001",
+    "title": "Avoid Using `memset` to Delete Sensitive Data",
+    "description": "Detects instances where `memset` is used to delete sensitive data, potentially leading to vulnerabilities due to compiler optimizations.",
+    "impact": "High",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "sensitive-data", "memory-management"],
+    "severity": "Blocker",
+    "cwe": "CWE-14: Compiler Removal of Code to Clear Buffers",
+    "examples": {
+      "positive": [
+        {
+          "code": "void secure_memset(void* ptr, int value, size_t num) {\n  volatile char* vptr = ptr;\n  while (num--) {\n    *vptr++ = value;\n  }\n}\nchar sensitiveData[1024];\n// ...\nsecure_memset(sensitiveData, 0, sizeof(sensitiveData));",
+          "description": "Uses a secure memory wipe function to clear sensitive data."
+        }
+      ],
+      "negative": [
+        {
+          "code": "char sensitiveData[1024];\n// ...\nmemset(sensitiveData, 0, sizeof(sensitiveData));\nfree(sensitiveData);",
+          "description": "Uses `memset` to clear sensitive data, potentially vulnerable to compiler optimizations.",
+          "pattern": "(memset\\(.*?, 0, .*?\\);\\s*free\\(.*?\\);)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Use a secure memory wipe function that is resistant to compiler optimizations.",
+        "Ensure that the secure memory wipe function is called before freeing the memory."
+      ],
+      "examples": [
+        {
+          "code": "void secure_memset(void* ptr, int value, size_t num) {\n  volatile char* vptr = ptr;\n  while (num--) {\n    *vptr++ = value;\n  }\n}\nchar sensitiveData[1024];\n// ...\nsecure_memset(sensitiveData, 0, sizeof(sensitiveData));",
+          "description": "Uses a secure memory wipe function to clear sensitive data."
+        }
+      ]
+    },
+    "rationale": "Using `memset` to clear sensitive data can lead to vulnerabilities due to compiler optimizations. Secure memory wipe functions should be used instead to ensure sensitive data is properly cleared."
+  },
+  {
+    "id": "CS002",
+    "title": "Avoid Buffer Overflows with POSIX Functions",
+    "description": "Detects instances where POSIX functions are called with arguments that trigger buffer overflows, potentially leading to security vulnerabilities.",
+    "impact": "High",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "buffer-overflow", "posix"],
+    "severity": "Blocker",
+    "cwe": "CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')",
+    "examples": {
+      "positive": [
+        {
+          "code": "char buffer[1024];\nsize_t bufferSize = sizeof(buffer);\nread(fd, buffer, bufferSize);",
+          "description": "Correctly checks the size of the buffer before reading data into it."
+        }
+      ],
+      "negative": [
+        {
+          "code": "char buffer[1024];\nread(fd, buffer, 2048);",
+          "description": "Passes a size larger than the buffer's size, potentially causing a buffer overflow.",
+          "pattern": "(read|write|memcpy|strcpy)\\(.*?, .*?, (\\d+|[^\\)]+?)\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Always check the size of the buffer before passing it to POSIX functions.",
+        "Ensure that the size argument does not exceed the buffer's size."
+      ],
+      "examples": [
+        {
+          "code": "char buffer[1024];\nsize_t bufferSize = sizeof(buffer);\nread(fd, buffer, bufferSize);",
+          "description": "Correctly checks the size of the buffer before reading data into it."
+        }
+      ]
+    },
+    "rationale": "Buffer overflows can lead to serious security issues, including information disclosure, code execution, and denial of service. Ensuring that POSIX functions are called with correct buffer sizes is crucial for preventing these vulnerabilities."
+  },{
+    "id": "CS003",
+    "title": "Prevent XXE Vulnerabilities in XML Parsers",
+    "description": "Detects instances where XML parsers are vulnerable to XML External Entity (XXE) attacks, potentially leading to sensitive data exposure, denial-of-service, and server-side request forgery.",
+    "impact": "High",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "xxe", "xml"],
+    "severity": "Blocker",
+    "cwe": "CWE-611: Improper Restriction of XML External Entity Reference",
+    "examples": {
+      "positive": [
+        {
+          "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\nfactory.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\nfactory.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);\nSAXParser parser = factory.newSAXParser();",
+          "description": "Disables external entity processing in an XML parser."
+        }
+      ],
+      "negative": [
+        {
+          "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nSAXParser parser = factory.newSAXParser();",
+          "description": "Enables external entity processing by default, potentially allowing XXE attacks.",
+          "pattern": "SAXParserFactory\\.newInstance\\(\\)\\.newSAXParser\\(\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Disable external entity processing in XML parsers.",
+        "Set features to restrict XML external entity references."
+      ],
+      "examples": [
+        {
+          "code": "SAXParserFactory factory = SAXParserFactory.newInstance();\nfactory.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\nfactory.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\nfactory.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\nfactory.setFeature(\"http://apache.org/xml/features/nonvalidating/load-external-dtd\", false);\nSAXParser parser = factory.newSAXParser();",
+          "description": "Disables external entity processing in an XML parser."
+        }
+      ]
+    },
+    "rationale": "XXE vulnerabilities can lead to sensitive data exposure, denial-of-service, and server-side request forgery. Disabling external entity processing in XML parsers is crucial for preventing these attacks."
+  },
+  {
+    "id": "CS004",
+    "title": "Prevent TOCTOU Vulnerabilities in File Access",
+    "description": "Detects instances where file access operations are vulnerable to Time-Of-Check to Time-Of-Use (TOCTOU) attacks, potentially leading to arbitrary code execution, privilege escalation, and denial-of-service.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "toctou", "file-access"],
+    "severity": "Critical",
+    "cwe": "CWE-367: Time-of-Check to Time-of-Use (TOCTOU) Race Condition",
+    "examples": {
+      "positive": [
+        {
+          "code": "if (file_exists(\"file.txt\") && is_writable(\"file.txt\")) {\n  // file operations\n}",
+          "description": "Performs file existence and writability checks atomically."
+        }
+      ],
+      "negative": [
+        {
+          "code": "if (file_exists(\"file.txt\")) {\n  // file operations\n}",
+          "description": "Performs file existence check without ensuring file properties remain unchanged before use.",
+          "pattern": "file_exists\\(.*?\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Perform file checks and operations atomically to prevent TOCTOU vulnerabilities.",
+        "Use file locking mechanisms to ensure exclusive access."
+      ],
+      "examples": [
+        {
+          "code": "if (file_exists(\"file.txt\") && is_writable(\"file.txt\")) {\n  // file operations\n}",
+          "description": "Performs file existence and writability checks atomically."
+        }
+      ]
+    },
+    "rationale": "TOCTOU vulnerabilities can lead to arbitrary code execution, privilege escalation, and denial-of-service. Ensuring file checks and operations are performed atomically is crucial for preventing these attacks."
+  },
+  {
+    "id": "CS005",
+    "title": "Use Robust Cipher Algorithms",
+    "description": "Detects instances where weak or insecure cipher algorithms are used, potentially allowing attackers to recover encrypted messages or modify their contents.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "cryptography", "encryption"],
+    "severity": "Critical",
+    "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+    "examples": {
+      "positive": [
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");",
+          "description": "Uses a secure cipher algorithm (AES/GCM/NoPadding)."
+        }
+      ],
+      "negative": [
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"DES/ECB/NoPadding\");",
+          "description": "Uses a weak cipher algorithm (DES/ECB/NoPadding).",
+          "pattern": "Cipher\\.getInstance\\(\"DES.*?\"\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Use secure and widely accepted cipher algorithms (e.g., AES, RSA).",
+        "Avoid using weak or deprecated algorithms (e.g., DES, MD5)."
+      ],
+      "examples": [
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");",
+          "description": "Uses a secure cipher algorithm (AES/GCM/NoPadding)."
+        }
+      ]
+    },
+    "rationale": "Using robust cipher algorithms is crucial for protecting sensitive information and ensuring secure communication. Weak algorithms can be easily broken, allowing attackers to recover encrypted messages or modify their contents."
+  },
+  {
+    "id": "CS006",
+    "title": "Use Secure Mode and Padding Scheme with Encryption Algorithms",
+    "description": "Detects instances where encryption algorithms are used without secure mode or padding scheme, potentially exposing encrypted data to attacks.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "cryptography", "encryption"],
+    "severity": "Critical",
+    "cwe": "CWE-329: Not Using a Random Initialization Vector (IV) in Cryptography",
+    "examples": {
+      "positive": [
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");",
+          "description": "Uses a secure cipher algorithm (AES/GCM/NoPadding) with authenticated encryption."
+        },
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"RSA/OAEP/SHA-256\");",
+          "description": "Uses a secure RSA algorithm (RSA/OAEP/SHA-256) with padding scheme."
+        }
+      ],
+      "negative": [
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"AES/ECB/NoPadding\");",
+          "description": "Uses a weak cipher algorithm (AES/ECB/NoPadding) without secure mode.",
+          "pattern": "Cipher\\.getInstance\\(\"AES/ECB.*?\"\\)"
+        },
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"RSA/None/NoPadding\");",
+          "description": "Uses a weak RSA algorithm (RSA/None/NoPadding) without padding scheme.",
+          "pattern": "Cipher\\.getInstance\\(\"RSA/None.*?\"\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Use secure cipher algorithms with authenticated encryption (e.g., AES/GCM/NoPadding).",
+        "Use secure RSA algorithms with padding schemes (e.g., RSA/OAEP/SHA-256)."
+      ],
+      "examples": [
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");",
+          "description": "Uses a secure cipher algorithm (AES/GCM/NoPadding) with authenticated encryption."
+        },
+        {
+          "code": "Cipher cipher = Cipher.getInstance(\"RSA/OAEP/SHA-256\");",
+          "description": "Uses a secure RSA algorithm (RSA/OAEP/SHA-256) with padding scheme."
+        }
+      ]
+    },
+    "rationale": "Using secure mode and padding scheme with encryption algorithms is crucial for protecting sensitive information and ensuring secure communication. Weak algorithms and modes can be easily broken, allowing attackers to recover encrypted messages or modify their contents."
+  },
+  {
+    "id": "CS007",
+    "title": "Verify Server Hostnames during SSL/TLS Connections",
+    "description": "Detects instances where server hostname verification is disabled during SSL/TLS connections, potentially allowing attackers to impersonate trusted hosts.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "ssl", "tls", "hostname-verification"],
+    "severity": "Critical",
+    "cwe": "CWE-297: Improper Validation of Certificate with Hostname Mismatch",
+    "examples": {
+      "positive": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new DefaultTrustManager() }, null);\nHostnameVerifier verifier = new DefaultHostnameVerifier();\nHttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());\nconnection.setHostnameVerifier(verifier);",
+          "description": "Verifies server hostname during SSL/TLS connection."
+        }
+      ],
+      "negative": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new DefaultTrustManager() }, null);\nHttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());",
+          "description": "Disables server hostname verification during SSL/TLS connection.",
+          "pattern": "SSLContext.*?setHostnameVerifier\\(null\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Enable server hostname verification during SSL/TLS connections.",
+        "Use a custom HostnameVerifier to ensure proper verification."
+      ],
+      "examples": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new DefaultTrustManager() }, null);\nHostnameVerifier verifier = new DefaultHostnameVerifier();\nHttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());\nconnection.setHostnameVerifier(verifier);",
+          "description": "Verifies server hostname during SSL/TLS connection."
+        }
+      ]
+    },
+    "rationale": "Server hostname verification is crucial for ensuring the identity of the server during SSL/TLS connections. Disabling this verification allows attackers to impersonate trusted hosts, leading to potential data breaches and security threats."
+  },
+  {
+    "id": "CS008",
+    "title": "Verify Server Certificates during SSL/TLS Connections",
+    "description": "Detects instances where server certificate verification is disabled during SSL/TLS connections, potentially allowing attackers to intercept encrypted communications.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "ssl", "tls", "certificate-validation"],
+    "severity": "Critical",
+    "cwe": "CWE-295: Improper Certificate Validation",
+    "examples": {
+      "positive": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new DefaultTrustManager() }, null);\nHttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());",
+          "description": "Verifies server certificate during SSL/TLS connection."
+        }
+      ],
+      "negative": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new NoCheckTrustManager() }, null);\nHttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());",
+          "description": "Disables server certificate verification during SSL/TLS connection.",
+          "pattern": "TrustManager.*?NoCheckTrustManager"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Enable server certificate verification during SSL/TLS connections.",
+        "Use a custom TrustManager to ensure proper verification."
+      ],
+      "examples": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\nsslContext.init(null, new TrustManager[] { new DefaultTrustManager() }, null);\nHttpsURLConnection connection = (HttpsURLConnection) url.openConnection();\nconnection.setSSLSocketFactory(sslContext.getSocketFactory());",
+          "description": "Verifies server certificate during SSL/TLS connection."
+        }
+      ]
+    },
+    "rationale": "Server certificate verification is crucial for ensuring the identity of the server during SSL/TLS connections. Disabling this verification allows attackers to intercept encrypted communications, leading to potential data breaches and security threats."
+  },
+  {
+    "id": "CS010",
+    "title": "Avoid Weak SSL/TLS Protocols",
+    "description": "Detects instances where weak SSL/TLS protocols are used, potentially exposing encrypted data to attacks.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "ssl", "tls", "weak-protocols"],
+    "severity": "Critical",
+    "cwe": "CWE-326: Inadequate Encryption Strength",
+    "examples": {
+      "positive": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.2\");",
+          "description": "Uses a secure TLS protocol (TLSv1.2)."
+        }
+      ],
+      "negative": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"SSLv3\");",
+          "description": "Uses a weak SSL protocol (SSLv3).",
+          "pattern": "SSLContext.*?getInstance\\(\"SSLv3\"\\)"
+        },
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.0\");",
+          "description": "Uses a weak TLS protocol (TLSv1.0).",
+          "pattern": "SSLContext.*?getInstance\\(\"TLSv1.0\"\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Use secure SSL/TLS protocols (e.g., TLSv1.2, TLSv1.3).",
+        "Disable weak SSL/TLS protocols (e.g., SSLv3, TLSv1.0, TLSv1.1)."
+      ],
+      "examples": [
+        {
+          "code": "SSLContext sslContext = SSLContext.getInstance(\"TLSv1.2\");",
+          "description": "Uses a secure TLS protocol (TLSv1.2)."
+        }
+      ]
+    },
+    "rationale": "Using weak SSL/TLS protocols can expose encrypted data to attacks, leading to data breaches and security threats. It is essential to use secure protocols to ensure the confidentiality and integrity of sensitive data."
+  },
+  {
+    "id": "CS011",
+    "title": "Avoid Insecure Functions",
+    "description": "Detects instances where insecure functions are used, potentially leading to buffer overflow vulnerabilities.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "insecure-functions", "buffer-overflow"],
+    "severity": "Critical",
+    "cwe": "CWE-120: Buffer Copy without Checking Size of Input",
+    "examples": {
+      "positive": [
+        {
+          "code": "strncpy(dest, src, sizeof(dest));",
+          "description": "Uses a secure function (strncpy) to copy strings."
+        }
+      ],
+      "negative": [
+        {
+          "code": "strcpy(dest, src);",
+          "description": "Uses an insecure function (strcpy) to copy strings.",
+          "pattern": "strcpy\\(.*?\\)"
+        },
+        {
+          "code": "sprintf(buf, \"User input: %s\", userInput);",
+          "description": "Uses an insecure function (sprintf) to format strings.",
+          "pattern": "sprintf\\(.*?\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Use secure functions (e.g., strncpy, snprintf) instead of insecure ones (e.g., strcpy, sprintf).",
+        "Always check the size of input data before processing it."
+      ],
+      "examples": [
+        {
+          "code": "strncpy(dest, src, sizeof(dest));",
+          "description": "Uses a secure function (strncpy) to copy strings."
+        }
+      ]
+    },
+    "rationale": "Insecure functions can lead to buffer overflow vulnerabilities, allowing attackers to execute arbitrary code or cause denial of service. Using secure functions and checking input data sizes can prevent these vulnerabilities."
+  },
+  {
+    "id": "CS012",
+    "title": "Specify Field Width for %s Placeholder in scanf() and fscanf()",
+    "description": "Detects instances where scanf() or fscanf() format strings do not specify a field width for the %s placeholder, potentially leading to buffer overflow vulnerabilities.",
+    "impact": "Critical",
+    "category": "Security",
+    "tags": ["security", "vulnerability", "scanf", "fscanf", "buffer-overflow"],
+    "severity": "Critical",
+    "cwe": "CWE-121: Stack-based Buffer Overflow",
+    "examples": {
+      "positive": [
+        {
+          "code": "scanf(\"%10s\", buffer);",
+          "description": "Specifies a field width (10) for the %s placeholder."
+        }
+      ],
+      "negative": [
+        {
+          "code": "scanf(\"%s\", buffer);",
+          "description": "Does not specify a field width for the %s placeholder.",
+          "pattern": "scanf\\(.*?\"%s\".*?\\)"
+        },
+        {
+          "code": "fscanf(file, \"%s\", buffer);",
+          "description": "Does not specify a field width for the %s placeholder.",
+          "pattern": "fscanf\\(.*?\"%s\".*?\\)"
+        }
+      ]
+    },
+    "fix": {
+      "steps": [
+        "Specify a field width for the %s placeholder in scanf() and fscanf() format strings.",
+        "Ensure the field width is less than or equal to the size of the buffer."
+      ],
+      "examples": [
+        {
+          "code": "scanf(\"%10s\", buffer);",
+          "description": "Specifies a field width (10) for the %s placeholder."
+        }
+      ]
+    },
+    "rationale": "Not specifying a field width for the %s placeholder in scanf() and fscanf() format strings can lead to buffer overflow vulnerabilities, allowing attackers to overwrite memory and potentially execute arbitrary code."
+  }
+]
+}
