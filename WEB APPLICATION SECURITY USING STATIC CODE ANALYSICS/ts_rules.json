@@ -1,0 +1,1278 @@
+
+{
+  "rules": [
+    {
+      "id": "R003",
+      "title": "Prevent Open Redirect Vulnerabilities",
+      "description": "Detects and prevents open redirect vulnerabilities by ensuring that redirects do not use user-controllable data to construct URLs.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "redirect",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-601: URL Redirection to Untrusted Site ('Open Redirect')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const safeUrl = 'https://trusted.example.com/home';\nwindow.location.href = safeUrl;",
+            "description": "Redirect to a predefined, trusted URL."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const redirectUrl = request.query.url;\nwindow.location.href = redirectUrl;",
+            "description": "Redirecting based on user-controllable query parameters.",
+            "pattern": "window\\.location\\.href\\s*=\\s*request\\.query\\.url;"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using user-controllable input directly in redirects.",
+          "Use a whitelist of allowed URLs for redirects.",
+          "Validate and sanitize any user input used in constructing URLs.",
+          "Ensure that redirection only occurs to predefined and safe locations."
+        ],
+        "examples": [
+          {
+            "code": "const allowedUrls = ['https://trusted.example.com/home', 'https://trusted.example.com/profile'];\nconst redirectUrl = request.query.url;\nif (allowedUrls.includes(redirectUrl)) {\n    window.location.href = redirectUrl;\n} else {\n    window.location.href = 'https://trusted.example.com/home';\n}",
+            "description": "Redirect only to URLs in a predefined whitelist."
+          }
+        ]
+      },
+      "rationale": "Open redirect vulnerabilities can lead to phishing attacks and other malicious activities by redirecting users to untrusted sites. Implementing strict controls and validation on redirects helps ensure users are not inadvertently redirected to harmful domains."
+    },
+    {
+      "id": "R004",
+      "title": "Prevent Zip Slip Vulnerabilities",
+      "description": "Detects and prevents Zip Slip vulnerabilities by ensuring that paths extracted from archives are validated and do not lead to unintended file system locations.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "zip slip",
+        "path traversal",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import zipfile\nimport os\n\ndef extract_zip(zip_path, extract_to):\n    with zipfile.ZipFile(zip_path, 'r') as zip_ref:\n        for file_info in zip_ref.infolist():\n            # Ensure the path is within the extract directory\n            safe_path = os.path.join(extract_to, file_info.filename)\n            if os.path.commonprefix([safe_path, extract_to]) != extract_to:\n                raise Exception('Invalid path detected: {}'.format(file_info.filename))\n            zip_ref.extract(file_info, extract_to)",
+            "description": "Validates that the paths extracted from the zip file are within the intended extraction directory."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import zipfile\n\nwith zipfile.ZipFile('archive.zip', 'r') as zip_ref:\n    zip_ref.extractall('/var/www/html')",
+            "description": "Extracting files from an archive without validating the paths can lead to Zip Slip vulnerabilities.",
+            "pattern": "zip_ref\\.extractall\\s*\\(\\s*['\"].*['\"]\\s*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Validate and sanitize file paths extracted from archives to ensure they do not traverse outside the intended directory.",
+          "Use path normalization functions to ensure extracted paths are within the designated extraction directory.",
+          "Avoid extracting archives directly to sensitive directories without proper validation."
+        ],
+        "examples": [
+          {
+            "code": "import zipfile\nimport os\n\ndef extract_zip(zip_path, extract_to):\n    with zipfile.ZipFile(zip_path, 'r') as zip_ref:\n        for file_info in zip_ref.infolist():\n            # Normalize and validate the path\n            safe_path = os.path.normpath(os.path.join(extract_to, file_info.filename))\n            if not safe_path.startswith(os.path.abspath(extract_to)):\n                raise Exception('Invalid path detected: {}'.format(file_info.filename))\n            zip_ref.extract(file_info, extract_to)",
+            "description": "Using path normalization and validation to ensure safe extraction."
+          }
+        ]
+      },
+      "rationale": "Zip Slip vulnerabilities can lead to serious security issues, including unauthorized file access or corruption. Ensuring that extracted paths are properly validated helps prevent exploitation of such vulnerabilities."
+    },
+    {
+      "id": "R005",
+      "title": "Prevent DOM-Based XSS Vulnerabilities",
+      "description": "Detects and prevents DOM-based XSS vulnerabilities by ensuring that user-controllable data is properly sanitized before being used in dangerous functions or inserted into the DOM.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "XSS",
+        "cross-site scripting",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import urllib.parse\n\nfrom flask import Flask, request, escape\napp = Flask(__name__)\n\n@app.route('/safe')\ndef safe():\n    user_input = escape(request.args.get('input', ''))\n    return f'<p>Safe input: {user_input}</p>'",
+            "description": "Sanitizes user input before inserting it into the HTML to prevent XSS."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request\napp = Flask(__name__)\n\n@app.route('/unsafe')\ndef unsafe():\n    user_input = request.args.get('input', '')\n    return f'<p>User input: {user_input}</p>'",
+            "description": "Directly inserting user input into the HTML without sanitization, which can lead to XSS vulnerabilities.",
+            "pattern": "return\\s*\\f*'<p>User input:\\s*{user_input}</p>'"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Sanitize user input before using it in the DOM or dangerous functions.",
+          "Use appropriate libraries or frameworks that provide built-in sanitization and escaping functions.",
+          "Avoid using dangerous functions such as eval() with user-controlled data.",
+          "Ensure that all user inputs are validated and escaped before being rendered or used in the application."
+        ],
+        "examples": [
+          {
+            "code": "import urllib.parse\n\nfrom flask import Flask, request, escape\napp = Flask(__name__)\n\n@app.route('/safe')\ndef safe():\n    user_input = escape(request.args.get('input', ''))\n    return f'<p>Safe input: {user_input}</p>'",
+            "description": "Using escaping functions to properly sanitize user input before rendering."
+          }
+        ]
+      },
+      "rationale": "DOM-based XSS vulnerabilities can lead to serious security issues, including unauthorized access to user data and manipulation of web content. Properly sanitizing user input helps prevent XSS attacks and protects users from malicious code."
+    },
+    {
+      "id": "R006",
+      "title": "Prevent Dynamic Code Execution Vulnerabilities",
+      "description": "Detects and prevents vulnerabilities related to dynamic code execution by ensuring that user-controllable input is not directly used in dynamic code execution functions.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "code injection",
+        "dynamic execution",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-94: Improper Control of Generation of Code ('Code Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import subprocess\n\n# Example of secure subprocess call\nsubprocess.run(['ls', '-l'], check=True)",
+            "description": "Avoids using user input in dynamic code execution functions."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import subprocess\n\n# Vulnerable to code injection\nuser_input = request.args.get('input', '')\nsubprocess.run(user_input, shell=True)",
+            "description": "Using user input directly in dynamic code execution functions can lead to code injection vulnerabilities.",
+            "pattern": "subprocess\\.run\\s*\\(\\s*user_input\\s*,\\s*shell=True\\s*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using user input in functions that execute dynamic code or shell commands.",
+          "If dynamic execution is necessary, validate and sanitize user input to prevent injection attacks.",
+          "Use language or framework-specific methods for safe dynamic execution, avoiding direct shell calls."
+        ],
+        "examples": [
+          {
+            "code": "import subprocess\n\n# Validate user input before using it\nvalid_inputs = ['list', 'show']\nuser_input = request.args.get('input', '')\nif user_input in valid_inputs:\n    subprocess.run(['ls', '-l'], check=True)",
+            "description": "Validates user input to ensure it matches predefined safe values before using it in dynamic code execution."
+          }
+        ]
+      },
+      "rationale": "Dynamic code execution vulnerabilities can lead to severe security issues, including unauthorized access to sensitive data, denial of service, or privilege escalation. Proper input validation and avoiding direct execution of user-controlled data are critical for maintaining application security."
+    },
+    {
+      "id": "R007",
+      "title": "Prevent NoSQL Injection Vulnerabilities",
+      "description": "Detects and prevents NoSQL injection vulnerabilities by ensuring that user-controllable data is properly sanitized and validated before being used in NoSQL queries.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "NoSQL injection",
+        "database security",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "from pymongo import MongoClient\n\nclient = MongoClient()\ndb = client.my_database\n\n# Secure query using parameterized inputs\nuser_input = request.args.get('user_id', '')\nquery = {'user_id': user_input}\nresults = db.users.find(query)",
+            "description": "Uses parameterized queries to safely include user input in NoSQL operations."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from pymongo import MongoClient\n\nclient = MongoClient()\ndb = client.my_database\n\n# Vulnerable query construction\nuser_input = request.args.get('user_id', '')\nquery = {'user_id': user_input}\nresults = db.users.find(query)",
+            "description": "Directly including user input in NoSQL queries without sanitization, which can lead to NoSQL injection vulnerabilities.",
+            "pattern": "db\\.users\\.find\\s*\\(\\s*query\\s*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid including untrusted user input directly in NoSQL queries.",
+          "Use parameterized queries or query builders that handle input safely.",
+          "Validate and sanitize user input before using it in queries.",
+          "Apply least privilege principles to database access to limit potential damage."
+        ],
+        "examples": [
+          {
+            "code": "from pymongo import MongoClient\n\nclient = MongoClient()\ndb = client.my_database\n\n# Secure query construction\nuser_input = request.args.get('user_id', '')\nif validate_user_input(user_input):\n    query = {'user_id': user_input}\n    results = db.users.find(query)",
+            "description": "Sanitizes and validates user input before using it in NoSQL queries."
+          }
+        ]
+      },
+      "rationale": "NoSQL injection vulnerabilities can lead to severe security issues, such as unauthorized data access, data leakage, and privilege escalation. Proper input validation and the use of secure query mechanisms help mitigate these risks."
+    },
+    {
+      "id": "R008",
+      "title": "Prevent Open Redirection Vulnerabilities",
+      "description": "Detects and prevents open redirection vulnerabilities by ensuring that user-controllable data used in redirection URLs is validated and restricted to trusted domains.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "open redirection",
+        "security",
+        "vulnerability",
+        "redirect"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-601: URL Redirection to Untrusted Site ('Open Redirect')",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, request, redirect\n\napp = Flask(__name__)\n\n# Define a list of allowed domains\nALLOWED_DOMAINS = ['trusted.example.com', 'another-trusted.com']\n\n@app.route('/redirect')\ndef safe_redirect():\n    target = request.args.get('url', '')\n    # Ensure the target domain is in the allowed list\n    if any(target.startswith(f'https://{domain}') for domain in ALLOWED_DOMAINS):\n        return redirect(target)\n    return 'Invalid redirect URL', 400",
+            "description": "Validates the redirect URL to ensure it points to an allowed domain before performing the redirection."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request, redirect\n\napp = Flask(__name__)\n\n@app.route('/redirect')\ndef unsafe_redirect():\n    target = request.args.get('url', '')\n    return redirect(target)",
+            "description": "Directly using user-controlled input for redirection without validation, which can lead to open redirection vulnerabilities.",
+            "pattern": "redirect\\(target\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Restrict redirections to a whitelist of trusted domains or URLs.",
+          "Validate and sanitize user input used in redirections.",
+          "Avoid using user-controlled data directly in redirection logic.",
+          "Ensure that redirection logic does not allow for arbitrary URL redirection."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, request, redirect\n\napp = Flask(__name__)\n\n# Define a list of allowed domains\nALLOWED_DOMAINS = ['trusted.example.com', 'another-trusted.com']\n\n@app.route('/redirect')\ndef safe_redirect():\n    target = request.args.get('url', '')\n    # Ensure the target domain is in the allowed list\n    if any(target.startswith(f'https://{domain}') for domain in ALLOWED_DOMAINS):\n        return redirect(target)\n    return 'Invalid redirect URL', 400",
+            "description": "Example of restricting redirection to trusted domains."
+          }
+        ]
+      },
+      "rationale": "Open redirection vulnerabilities can be exploited for phishing and malware distribution by tricking users into visiting malicious sites. Proper validation of redirection URLs helps prevent these attacks and ensures users are only redirected to trusted locations."
+    },
+    {
+      "id": "R009",
+      "title": "Prevent Reflected XSS Vulnerabilities",
+      "description": "Detects and prevents reflected XSS vulnerabilities by ensuring that user-controlled data is properly sanitized and escaped before being included in HTTP responses.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "XSS",
+        "cross-site scripting",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, request, escape\n\napp = Flask(__name__)\n\n@app.route('/search')\ndef search():\n    query = escape(request.args.get('q', ''))\n    return f'<p>Search results for: {query}</p>'",
+            "description": "Escapes user input to prevent reflected XSS by ensuring that it is safely rendered in HTML."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request\n\napp = Flask(__name__)\n\n@app.route('/search')\ndef search():\n    query = request.args.get('q', '')\n    return f'<p>Search results for: {query}</p>'",
+            "description": "Directly including user input in HTTP responses without escaping, which can lead to reflected XSS vulnerabilities.",
+            "pattern": "return\\s*\\f*'<p>Search results for:\\s*{query}</p>'"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Sanitize and escape all user inputs before including them in HTML responses.",
+          "Use libraries or frameworks that provide built-in escaping functions.",
+          "Avoid using untrusted user data directly in HTML output or other client-side contexts.",
+          "Implement content security policies (CSP) to mitigate the impact of potential XSS attacks."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, request, escape\n\napp = Flask(__name__)\n\n@app.route('/search')\ndef search():\n    query = escape(request.args.get('q', ''))\n    return f'<p>Search results for: {query}</p>'",
+            "description": "Using escaping functions to properly sanitize user input before rendering in HTML."
+          }
+        ]
+      },
+      "rationale": "Reflected XSS vulnerabilities can lead to serious security issues, including unauthorized access to user data, session hijacking, and malware distribution. Properly sanitizing and escaping user inputs helps prevent these attacks and ensures the security of web applications."
+    },
+    {
+      "id": "R010",
+      "title": "Prevent SQL Injection Vulnerabilities",
+      "description": "Detects and prevents SQL injection vulnerabilities by ensuring that user-controlled data is properly sanitized and parameterized in SQL queries.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "SQL injection",
+        "database security",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import sqlite3\n\nconn = sqlite3.connect('example.db')\ncursor = conn.cursor()\n\n# Secure query using parameterized inputs\nuser_id = request.args.get('user_id', '')\nquery = 'SELECT * FROM users WHERE user_id = ?'\ncursor.execute(query, (user_id,))\nresults = cursor.fetchall()",
+            "description": "Uses parameterized queries to safely include user input in SQL operations."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import sqlite3\n\nconn = sqlite3.connect('example.db')\ncursor = conn.cursor()\n\n# Vulnerable query construction\nuser_id = request.args.get('user_id', '')\nquery = f'SELECT * FROM users WHERE user_id = '{user_id}''\ncursor.execute(query)\nresults = cursor.fetchall()",
+            "description": "Directly including user input in SQL queries without parameterization, which can lead to SQL injection vulnerabilities.",
+            "pattern": "cursor\\.execute\\s*\\(\\s*query\\s*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use parameterized queries or prepared statements to include user input in SQL queries.",
+          "Avoid directly concatenating user input into SQL queries.",
+          "Validate and sanitize user input to ensure it conforms to expected formats.",
+          "Apply the principle of least privilege to database access to limit potential damage from attacks."
+        ],
+        "examples": [
+          {
+            "code": "import sqlite3\n\nconn = sqlite3.connect('example.db')\ncursor = conn.cursor()\n\n# Secure query construction\nuser_id = request.args.get('user_id', '')\nif validate_user_input(user_id):\n    query = 'SELECT * FROM users WHERE user_id = ?'\n    cursor.execute(query, (user_id,))\n    results = cursor.fetchall()",
+            "description": "Sanitizes and validates user input before using it in SQL queries."
+          }
+        ]
+      },
+      "rationale": "SQL injection vulnerabilities can lead to severe security issues, including unauthorized data access, data manipulation, and denial of service. Properly parameterizing SQL queries and validating user inputs are crucial for preventing these attacks and securing the database."
+    },
+    {
+      "id": "R011",
+      "title": "Prevent XXE Vulnerabilities in XML Parsers",
+      "description": "Detects and prevents XML External Entity (XXE) vulnerabilities by ensuring that XML parsers are configured to disallow external entities and are properly secured against XML-based attacks.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "XXE",
+        "XML parsing",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-20: Improper Input Validation",
+      "examples": {
+        "positive": [
+          {
+            "code": "import xml.etree.ElementTree as ET\n\ndef parse_xml(xml_string):\n    parser = ET.XMLParser()\n    parser.parser.UseForeignDTD(False)\n    root = ET.fromstring(xml_string, parser=parser)\n    return root",
+            "description": "Configures the XML parser to disallow external entities and prevent XXE attacks."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import xml.etree.ElementTree as ET\n\ndef parse_xml(xml_string):\n    root = ET.fromstring(xml_string)\n    return root",
+            "description": "Using an XML parser without disabling external entities, making it vulnerable to XXE attacks.",
+            "pattern": "ET\\.fromstring\\s*\\(xml_string\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Disable external entity processing in XML parsers by configuring the parser settings.",
+          "Use libraries or frameworks that do not enable external entities by default or provide secure configurations.",
+          "Validate and sanitize XML input to ensure it does not contain malicious payloads or references to external entities.",
+          "Implement application-level controls to handle and mitigate the impact of potential XML attacks."
+        ],
+        "examples": [
+          {
+            "code": "import xml.etree.ElementTree as ET\n\ndef parse_xml(xml_string):\n    parser = ET.XMLParser()\n    parser.parser.UseForeignDTD(False)\n    root = ET.fromstring(xml_string, parser=parser)\n    return root",
+            "description": "Disabling external entity processing to prevent XXE vulnerabilities."
+          }
+        ]
+      },
+      "rationale": "XXE vulnerabilities can lead to exposure of sensitive data, denial of service, and unauthorized system requests. Proper configuration of XML parsers to disable external entities helps prevent these security issues and protects sensitive information from being compromised."
+    },
+    {
+      "id": "R012",
+      "title": "Prevent Path Injection Vulnerabilities",
+      "description": "Detects and prevents path injection vulnerabilities by ensuring that file paths constructed from user-controlled input are properly validated and sanitized.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "path injection",
+        "file access",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import os\n\nALLOWED_DIR = '/safe/dir'\n\ndef get_file_content(filename):\n    # Sanitize and construct the file path\n    safe_path = os.path.join(ALLOWED_DIR, filename)\n    if os.path.commonprefix([safe_path, ALLOWED_DIR]) == ALLOWED_DIR:\n        with open(safe_path, 'r') as file:\n            return file.read()\n    raise ValueError('Invalid file path')",
+            "description": "Validates the file path to ensure it is within an allowed directory, preventing path traversal attacks."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import os\n\nALLOWED_DIR = '/safe/dir'\n\ndef get_file_content(filename):\n    # Unsafe path construction\n    file_path = os.path.join(ALLOWED_DIR, filename)\n    with open(file_path, 'r') as file:\n        return file.read()",
+            "description": "Directly using user input to construct file paths without validation, leading to potential path injection vulnerabilities.",
+            "pattern": "os\\.path\\.join\\s*\\(ALLOWED_DIR\\s*,\\s*filename\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Validate and sanitize user input to ensure that it does not contain malicious path components (e.g., '../').",
+          "Use functions to safely construct file paths, such as `os.path.join`, and validate that the final path is within a restricted and intended directory.",
+          "Apply access controls and least privilege principles to file operations.",
+          "Implement logging and monitoring to detect unauthorized file access attempts."
+        ],
+        "examples": [
+          {
+            "code": "import os\n\nALLOWED_DIR = '/safe/dir'\n\ndef get_file_content(filename):\n    # Sanitize and validate the file path\n    safe_path = os.path.join(ALLOWED_DIR, filename)\n    if os.path.commonprefix([safe_path, ALLOWED_DIR]) == ALLOWED_DIR:\n        with open(safe_path, 'r') as file:\n            return file.read()\n    raise ValueError('Invalid file path')",
+            "description": "Properly sanitizing and validating the file path to ensure it is within the allowed directory."
+          }
+        ]
+      },
+      "rationale": "Path injection vulnerabilities can lead to unauthorized access, file deletion, and data exposure. Proper validation and sanitization of file paths are crucial to prevent these attacks and secure the application from potential exploitation."
+    },
+    {
+      "id": "R013",
+      "title": "Prevent OS Command Injection Vulnerabilities",
+      "description": "Detects and prevents OS command injection vulnerabilities by ensuring that system commands constructed from user-controlled input are properly validated and sanitized.",
+      "impact": "High",
+      "category": "Security",
+      "tags": [
+        "command injection",
+        "OS commands",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import subprocess\n\n# Function to safely execute a command\n\ndef execute_command(command_args):\n    # Validate and sanitize input\n    if isinstance(command_args, list) and all(isinstance(arg, str) for arg in command_args):\n        result = subprocess.run(command_args, capture_output=True, text=True)\n        return result.stdout\n    raise ValueError('Invalid command arguments')",
+            "description": "Uses a list of arguments with `subprocess.run` to safely execute OS commands, avoiding injection vulnerabilities."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import os\n\n# Unsafe command construction\n\ndef execute_command(command):\n    os.system(f'echo {command}')",
+            "description": "Directly injecting user input into an OS command, which can lead to command injection vulnerabilities.",
+            "pattern": "os\\.system\\s*\\(\\s*['\"].*['\"]\\s*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use secure methods for executing OS commands, such as `subprocess.run` with a list of arguments.",
+          "Avoid directly injecting user input into command strings.",
+          "Validate and sanitize user input to ensure it does not contain malicious characters or commands.",
+          "Apply the principle of least privilege to limit the impact of potential command injection attacks."
+        ],
+        "examples": [
+          {
+            "code": "import subprocess\n\n# Function to safely execute a command\n\ndef execute_command(command_args):\n    # Validate and sanitize input\n    if isinstance(command_args, list) and all(isinstance(arg, str) for arg in command_args):\n        result = subprocess.run(command_args, capture_output=True, text=True)\n        return result.stdout\n    raise ValueError('Invalid command arguments')",
+            "description": "Properly validating and sanitizing command arguments before executing them."
+          }
+        ]
+      },
+      "rationale": "OS command injection vulnerabilities can lead to severe security issues, including unauthorized command execution, data leakage, and system compromise. Proper validation and sanitization of command inputs, along with secure methods for command execution, are essential to prevent these vulnerabilities."
+    },
+    {
+      "id": "R014",
+      "title": "Limit Scope of AWS IAM Permissions",
+      "description": "Detects and prevents overly broad AWS IAM permissions by ensuring that IAM policies are scoped to the minimum necessary permissions for users, groups, or roles.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "IAM policies",
+        "AWS",
+        "permissions",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-285: Improper Authorization",
+      "examples": {
+        "positive": [
+          {
+            "code": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": [\n        \"s3:GetObject\",\n        \"s3:ListBucket\"\n      ],\n      \"Resource\": [\n        \"arn:aws:s3:::example-bucket/*\",\n        \"arn:aws:s3:::example-bucket\"\n      ]\n    }\n  ]\n}",
+            "description": "IAM policy granting specific actions on a limited set of resources, adhering to the principle of least privilege."
+          }
+        ],
+        "negative": [
+          {
+            "code": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": \"*\",\n      \"Resource\": \"*\"\n    }\n  ]\n}",
+            "description": "IAM policy with wildcard permissions ('*') granting full access to all actions and resources, which can lead to privilege escalation.",
+            "pattern": "\"Action\":\\s*\"*\"\\s*,\\s*\"Resource\":\\s*\"*\""
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Define IAM policies with the principle of least privilege, granting only the permissions necessary for the intended tasks.",
+          "Avoid using wildcard ('*') permissions for actions and resources in IAM policies.",
+          "Regularly review and audit IAM policies to ensure they adhere to least privilege and remove any unused or excessive permissions.",
+          "Implement resource-level permissions to restrict access to specific AWS resources as needed."
+        ],
+        "examples": [
+          {
+            "code": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": [\n        \"ec2:StartInstances\",\n        \"ec2:StopInstances\"\n      ],\n      \"Resource\": [\n        \"arn:aws:ec2:region:account-id:instance/instance-id\"\n      ]\n    }\n  ]\n}",
+            "description": "IAM policy with restricted actions on specific EC2 instances, demonstrating a least privilege approach."
+          }
+        ]
+      },
+      "rationale": "Overly broad IAM permissions can lead to privilege escalation, unauthorized access, and potential security breaches. Ensuring that IAM policies are scoped to the minimum necessary permissions helps to mitigate these risks and secures the AWS environment against potential attacks."
+    },
+    {
+      "id": "R015",
+      "title": "Create New Session During User Authentication",
+      "description": "Detects and prevents session fixation vulnerabilities by ensuring that a new session identifier is created during user authentication, rather than reusing an existing session identifier.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "session fixation",
+        "authentication",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-384: Session Fixation",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, session\n\napp = Flask(__name__)\napp.secret_key = 'supersecretkey'\n\n@app.route('/login', methods=['POST'])\ndef login():\n    # Authenticate user\n    user = authenticate_user(request.form['username'], request.form['password'])\n    if user:\n        # Regenerate session ID after successful authentication\n        session.pop('_csrf_token', None)\n        session['user_id'] = user.id\n        return 'Logged in', 200\n    return 'Invalid credentials', 403",
+            "description": "Regenerates the session identifier after successful authentication, mitigating session fixation attacks."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, session\n\napp = Flask(__name__)\napp.secret_key = 'supersecretkey'\n\n@app.route('/login', methods=['POST'])\ndef login():\n    # Authenticate user\n    user = authenticate_user(request.form['username'], request.form['password'])\n    if user:\n        # Does not regenerate session ID, potentially vulnerable to session fixation\n        session['user_id'] = user.id\n        return 'Logged in', 200\n    return 'Invalid credentials', 403",
+            "description": "Reusing the existing session identifier without regeneration after authentication, which can lead to session fixation vulnerabilities.",
+            "pattern": "session\\['user_id'\\] = user\\.id"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that a new session identifier is created after successful user authentication.",
+          "Regenerate session IDs during authentication or sensitive operations to prevent session fixation attacks.",
+          "Avoid using session identifiers from untrusted sources, and always create new sessions for authenticated users.",
+          "Apply best practices for session management, including secure cookie handling and regular session expiration."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, session\n\napp = Flask(__name__)\napp.secret_key = 'supersecretkey'\n\n@app.route('/login', methods=['POST'])\ndef login():\n    # Authenticate user\n    user = authenticate_user(request.form['username'], request.form['password'])\n    if user:\n        # Regenerate session ID after successful authentication\n        session.clear()\n        session['user_id'] = user.id\n        return 'Logged in', 200\n    return 'Invalid credentials', 403",
+            "description": "Clearing the session and regenerating the session identifier after authentication to prevent session fixation."
+          }
+        ]
+      },
+      "rationale": "Session fixation attacks can allow attackers to hijack user sessions by exploiting predictable session identifiers. Creating a new session identifier during authentication helps prevent such attacks and enhances the security of the application."
+    },
+    {
+      "id": "R016",
+      "title": "Ensure JWTs Are Signed and Verified with Strong Cipher Algorithms",
+      "description": "Detects and prevents vulnerabilities related to JSON Web Tokens (JWTs) by ensuring that they are signed with strong cipher algorithms and properly verified to prevent forgery and impersonation.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "JWT",
+        "token security",
+        "cipher algorithms",
+        "verification",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-345: Insufficient Verification of Data Authenticity",
+      "examples": {
+        "positive": [
+          {
+            "code": "import jwt\n\n# Define the secret key\nSECRET_KEY = 'your-strong-secret-key'\n\n# Function to create a JWT\n\ndef create_jwt(payload):\n    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')\n\n# Function to verify a JWT\n\ndef verify_jwt(token):\n    try:\n        decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])\n        return decoded\n    except jwt.InvalidTokenError:\n        return None",
+            "description": "Uses HS256 algorithm to sign and verify JWTs, ensuring that tokens are properly secured and validated."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import jwt\n\n# Define the secret key\nSECRET_KEY = 'your-weak-secret-key'\n\n# Function to create a JWT\n\ndef create_jwt(payload):\n    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')\n\n# Function to verify a JWT (missing verification)\n\ndef verify_jwt(token):\n    return jwt.decode(token, SECRET_KEY, algorithms=['HS256'])\n    # This code does not handle exceptions, potentially insecure",
+            "description": "Using weak secret keys and failing to properly handle token verification can lead to vulnerabilities, including the risk of token forgery.",
+            "pattern": "jwt\\.decode\\s*\\(token, SECRET_KEY\\s*, algorithms=\\['HS256'\\]\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use strong, secret keys when signing JWTs to ensure the integrity and authenticity of the token.",
+          "Apply secure cipher algorithms, such as 'HS256' or 'RS256', to sign JWTs.",
+          "Always verify the JWT signature using the same key or public key used for signing.",
+          "Handle exceptions and errors during JWT verification to prevent unauthorized access due to token forgery."
+        ],
+        "examples": [
+          {
+            "code": "import jwt\n\n# Define the secret key\nSECRET_KEY = 'your-strong-secret-key'\n\n# Function to create a JWT\n\ndef create_jwt(payload):\n    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')\n\n# Function to verify a JWT\n\ndef verify_jwt(token):\n    try:\n        decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])\n        return decoded\n    except jwt.InvalidTokenError:\n        return None",
+            "description": "Properly signing JWTs with a strong secret key and verifying them using secure methods to ensure integrity and prevent forgery."
+          }
+        ]
+      },
+      "rationale": "JWTs must be signed and verified with strong cipher algorithms to ensure their integrity and prevent forgery. Without proper signing and verification, attackers can forge JWTs to impersonate users or gain unauthorized access, compromising the security and privacy of the application."
+    },
+    {
+      "id": "R017",
+      "title": "Ensure Cipher Algorithms Are Robust",
+      "description": "Detects and prevents vulnerabilities related to encryption by ensuring that cipher algorithms used for encrypting data are strong and considered secure by the cryptography community.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "encryption",
+        "cipher algorithms",
+        "data protection",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+      "examples": {
+        "positive": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\nfrom cryptography.hazmat.primitives import padding\nfrom cryptography.hazmat.backends import default_backend\n\n# Function to encrypt data\n\ndef encrypt_data(key, data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    encryptor = cipher.encryptor()\n    padded_data = padding.PKCS7(algorithms.AES.block_size).padder().update(data) + padding.PKCS7(algorithms.AES.block_size).padder().finalize()\n    encrypted = encryptor.update(padded_data) + encryptor.finalize()\n    return encrypted\n\n# Function to decrypt data\n\ndef decrypt_data(key, encrypted_data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    decryptor = cipher.decryptor()\n    decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()\n    unpadded_data = padding.PKCS7(algorithms.AES.block_size).unpadder().update(decrypted_padded) + padding.PKCS7(algorithms.AES.block_size).unpadder().finalize()\n    return unpadded_data",
+            "description": "Uses AES encryption with CFB mode and PKCS7 padding, demonstrating robust and secure encryption practices."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\n\n# Function to encrypt data with a weak cipher\n\ndef encrypt_data(key, data):\n    cipher = Cipher(algorithms.DES(key), modes.ECB())\n    encryptor = cipher.encryptor()\n    encrypted = encryptor.update(data) + encryptor.finalize()\n    return encrypted",
+            "description": "Using DES encryption with ECB mode, which is considered weak and insecure for protecting sensitive data.",
+            "pattern": "Cipher\\(algorithms\\.DES\\(key\\), modes\\.ECB\\(\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Select strong encryption algorithms that are widely accepted and recommended by cryptographic standards, such as AES with appropriate key sizes (e.g., 256-bit).",
+          "Avoid using deprecated or weak algorithms, such as DES, or insecure modes of operation like ECB.",
+          "Implement proper padding schemes when dealing with block ciphers to ensure data integrity and prevent padding attacks.",
+          "Regularly review and update encryption algorithms and practices to keep up with evolving security standards and recommendations."
+        ],
+        "examples": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\nfrom cryptography.hazmat.primitives import padding\nfrom cryptography.hazmat.backends import default_backend\n\n# Function to encrypt data\n\ndef encrypt_data(key, data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    encryptor = cipher.encryptor()\n    padded_data = padding.PKCS7(algorithms.AES.block_size).padder().update(data) + padding.PKCS7(algorithms.AES.block_size).padder().finalize()\n    encrypted = encryptor.update(padded_data) + encryptor.finalize()\n    return encrypted\n\n# Function to decrypt data\n\ndef decrypt_data(key, encrypted_data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    decryptor = cipher.decryptor()\n    decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()\n    unpadded_data = padding.PKCS7(algorithms.AES.block_size).unpadder().update(decrypted_padded) + padding.PKCS7(algorithms.AES.block_size).unpadder().finalize()\n    return unpadded_data",
+            "description": "Properly using AES with secure modes and padding to ensure robust encryption."
+          }
+        ]
+      },
+      "rationale": "Choosing strong and secure encryption algorithms is crucial for protecting sensitive data and ensuring privacy. Weak or outdated algorithms can compromise data confidentiality and integrity, making it easier for attackers to recover or manipulate encrypted information. Adhering to cryptographic best practices helps maintain a secure environment."
+    },
+    {
+      "id": "R018",
+      "title": "Ensure Encryption Algorithms Use Secure Modes and Padding Schemes",
+      "description": "Detects and prevents vulnerabilities related to encryption by ensuring that encryption algorithms are used with secure modes and proper padding schemes to protect against plaintext recovery and ciphertext manipulation.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "encryption",
+        "modes of operation",
+        "padding schemes",
+        "data protection",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+      "examples": {
+        "positive": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\nfrom cryptography.hazmat.primitives import padding\nfrom cryptography.hazmat.backends import default_backend\n\n# Function to encrypt data\n\ndef encrypt_data(key, iv, data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    encryptor = cipher.encryptor()\n    padder = padding.PKCS7(algorithms.AES.block_size).padder()\n    padded_data = padder.update(data) + padder.finalize()\n    encrypted = encryptor.update(padded_data) + encryptor.finalize()\n    return encrypted\n\n# Function to decrypt data\n\ndef decrypt_data(key, iv, encrypted_data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    decryptor = cipher.decryptor()\n    decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()\n    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()\n    unpadded_data = unpadder.update(decrypted_padded) + unpadder.finalize()\n    return unpadded_data",
+            "description": "Uses AES with CFB mode and PKCS7 padding, demonstrating the use of secure encryption modes and padding schemes."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\n\n# Function to encrypt data with a weak cipher\n\ndef encrypt_data(key, data):\n    cipher = Cipher(algorithms.DES(key), modes.ECB())\n    encryptor = cipher.encryptor()\n    encrypted = encryptor.update(data) + encryptor.finalize()\n    return encrypted",
+            "description": "Using DES with ECB mode, which is weak and insecure for encryption. This mode does not provide adequate protection against pattern analysis and plaintext recovery.",
+            "pattern": "Cipher\\(algorithms\\.DES\\(key\\), modes\\.ECB\\(\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use secure encryption modes such as CFB, GCM, or CBC with appropriate padding schemes to protect data integrity and confidentiality.",
+          "Avoid using weak modes like ECB for block ciphers, as they are susceptible to various cryptographic attacks.",
+          "For RSA, use secure padding schemes like OAEP (Optimal Asymmetric Encryption Padding) rather than older and less secure schemes like PKCS1v1.5.",
+          "Regularly review and update encryption practices to ensure they align with current cryptographic standards and recommendations."
+        ],
+        "examples": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\nfrom cryptography.hazmat.primitives import padding\nfrom cryptography.hazmat.backends import default_backend\n\n# Function to encrypt data\n\ndef encrypt_data(key, iv, data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    encryptor = cipher.encryptor()\n    padder = padding.PKCS7(algorithms.AES.block_size).padder()\n    padded_data = padder.update(data) + padder.finalize()\n    encrypted = encryptor.update(padded_data) + encryptor.finalize()\n    return encrypted\n\n# Function to decrypt data\n\ndef decrypt_data(key, iv, encrypted_data):\n    backend = default_backend()\n    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)\n    decryptor = cipher.decryptor()\n    decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()\n    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()\n    unpadded_data = unpadder.update(decrypted_padded) + unpadder.finalize()\n    return unpadded_data",
+            "description": "Properly using AES with secure modes and padding to ensure robust encryption and protection against data manipulation and plaintext recovery."
+          }
+        ]
+      },
+      "rationale": "Encryption algorithms must be used with secure modes and padding schemes to prevent potential attacks that could compromise data confidentiality and integrity. Insecure modes or outdated padding schemes can expose encrypted data to risks, including plaintext recovery and ciphertext manipulation. Adhering to current cryptographic standards ensures that sensitive data remains protected against such vulnerabilities."
+    },
+    {
+      "id": "R019",
+      "title": "Ensure Server Hostnames Are Verified During SSL/TLS Connections",
+      "description": "Detects and prevents vulnerabilities related to SSL/TLS connections by ensuring that server hostnames are properly verified to prevent impersonation and man-in-the-middle attacks.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "SSL/TLS",
+        "hostname verification",
+        "security",
+        "vulnerability",
+        "privacy"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-297: Improper Verification of Cryptographic Signature",
+      "examples": {
+        "positive": [
+          {
+            "code": "import requests\n\n# Function to make a secure request with hostname verification\n\ndef secure_request(url):\n    response = requests.get(url, verify=True)\n    return response.text",
+            "description": "Uses the `verify=True` option in the `requests` library to ensure that SSL/TLS certificates are validated and hostnames are checked."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import requests\n\n# Function to make a request without hostname verification\n\ndef insecure_request(url):\n    response = requests.get(url, verify=False)\n    return response.text",
+            "description": "Disabling SSL/TLS certificate verification by setting `verify=False` can lead to security vulnerabilities including impersonation attacks.",
+            "pattern": "requests\\.get\\(url, verify=False\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that SSL/TLS connections validate the server’s certificate and verify the hostname to prevent impersonation and man-in-the-middle attacks.",
+          "Use libraries and frameworks that enforce hostname verification by default or explicitly enable this feature in configurations.",
+          "Regularly update libraries and frameworks to ensure they include the latest security patches and best practices for SSL/TLS connections.",
+          "Review and audit code to ensure that SSL/TLS verification settings are not inadvertently disabled or bypassed."
+        ],
+        "examples": [
+          {
+            "code": "import requests\n\n# Function to make a secure request with hostname verification\n\ndef secure_request(url):\n    response = requests.get(url, verify=True)\n    return response.text",
+            "description": "Ensures SSL/TLS verification and hostname validation, protecting against impersonation attacks."
+          }
+        ]
+      },
+      "rationale": "Proper verification of server hostnames during SSL/TLS connections is essential for maintaining trust and security in internet communications. Failure to verify hostnames can allow attackers to impersonate trusted entities, leading to potential data breaches and man-in-the-middle attacks. By enforcing hostname verification, you protect against such vulnerabilities and ensure the integrity and confidentiality of your data."
+    },
+    {
+      "id": "R020",
+      "title": "Ensure Server Certificates Are Verified During SSL/TLS Connections",
+      "description": "Detects and prevents vulnerabilities related to SSL/TLS connections by ensuring that server certificates are properly validated to prevent interception, impersonation, and data manipulation.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "SSL/TLS",
+        "certificate validation",
+        "security",
+        "vulnerability",
+        "privacy"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-297: Improper Verification of Cryptographic Signature",
+      "examples": {
+        "positive": [
+          {
+            "code": "import requests\n\n# Function to make a secure request with certificate verification\n\ndef secure_request(url):\n    response = requests.get(url, verify=True)\n    return response.text",
+            "description": "Uses the `verify=True` option in the `requests` library to ensure that SSL/TLS certificates are validated, protecting against man-in-the-middle attacks and ensuring secure communication."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import requests\n\n# Function to make a request without certificate verification\n\ndef insecure_request(url):\n    response = requests.get(url, verify=False)\n    return response.text",
+            "description": "Disabling SSL/TLS certificate verification by setting `verify=False` can lead to vulnerabilities including data interception and impersonation attacks.",
+            "pattern": "requests\\.get\\(url, verify=False\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that SSL/TLS connections validate the server’s certificate to confirm the identity of the server and prevent potential interception and data manipulation.",
+          "Use libraries and frameworks that enforce certificate validation by default or explicitly enable this feature in configurations.",
+          "Regularly update libraries and frameworks to ensure they include the latest security patches and adhere to best practices for SSL/TLS connections.",
+          "Review and audit code to ensure that SSL/TLS certificate validation settings are not inadvertently disabled or bypassed."
+        ],
+        "examples": [
+          {
+            "code": "import requests\n\n# Function to make a secure request with certificate verification\n\ndef secure_request(url):\n    response = requests.get(url, verify=True)\n    return response.text",
+            "description": "Ensures SSL/TLS certificate validation is enforced, protecting against potential attacks and ensuring secure communication."
+          }
+        ]
+      },
+      "rationale": "Proper verification of server certificates during SSL/TLS connections is critical for maintaining the security and integrity of internet communications. Failure to validate certificates can expose systems to risks such as data interception, impersonation, and data manipulation. Adhering to best practices for certificate validation helps ensure that communications are secure and trustworthy."
+    },
+    {
+      "id": "R021",
+      "title": "Ensure Cryptographic Keys Are Robust",
+      "description": "Detects and prevents vulnerabilities related to cryptographic keys by ensuring that keys used in encryption algorithms are sufficiently robust to protect against attacks aiming to recover the plaintext.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "cryptography",
+        "key management",
+        "encryption",
+        "security",
+        "vulnerability",
+        "privacy"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-321: Use of Hard-coded Cryptographic Key",
+      "examples": {
+        "positive": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\nfrom cryptography.hazmat.primitives import serialization\nfrom cryptography.hazmat.primitives.asymmetric import rsa\n\n# Generate a strong RSA key\n\ndef generate_rsa_key():\n    private_key = rsa.generate_private_key(\n        public_exponent=65537,\n        key_size=2048\n    )\n    return private_key\n\n# Function to encrypt data\n\ndef encrypt_data(private_key, data):\n    public_key = private_key.public_key()\n    cipher = Cipher(algorithms.RSA(public_key), modes.OFB())\n    encryptor = cipher.encryptor()\n    encrypted = encryptor.update(data) + encryptor.finalize()\n    return encrypted\n\n# Function to decrypt data\n\ndef decrypt_data(private_key, encrypted_data):\n    cipher = Cipher(algorithms.RSA(private_key), modes.OFB())\n    decryptor = cipher.decryptor()\n    decrypted = decryptor.update(encrypted_data) + decryptor.finalize()\n    return decrypted",
+            "description": "Uses RSA with a key size of 2048 bits, demonstrating robust key management and encryption practices."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\n\n# Function to encrypt data with a weak key\n\ndef encrypt_data(weak_key, data):\n    cipher = Cipher(algorithms.AES(weak_key), modes.ECB())\n    encryptor = cipher.encryptor()\n    encrypted = encryptor.update(data) + encryptor.finalize()\n    return encrypted",
+            "description": "Using AES with a weak key size or insecure mode like ECB can expose encrypted data to attacks and potential recovery of plaintext.",
+            "pattern": "Cipher\\(algorithms\\.AES\\(weak_key\\), modes\\.ECB\\(\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Use cryptographic keys with sufficient length and strength to ensure data security. For example, RSA keys should be at least 2048 bits, and AES keys should be at least 128 bits.",
+          "Avoid using weak or deprecated encryption algorithms and modes. For AES, prefer modes like GCM or CBC over ECB.",
+          "Generate keys using secure, cryptographically secure random number generators, and avoid hard-coding keys in source code.",
+          "Regularly review and update cryptographic practices to adhere to current security standards and recommendations."
+        ],
+        "examples": [
+          {
+            "code": "from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes\nfrom cryptography.hazmat.primitives import serialization\nfrom cryptography.hazmat.primitives.asymmetric import rsa\n\n# Generate a strong RSA key\n\ndef generate_rsa_key():\n    private_key = rsa.generate_private_key(\n        public_exponent=65537,\n        key_size=2048\n    )\n    return private_key\n\n# Function to encrypt data\n\ndef encrypt_data(private_key, data):\n    public_key = private_key.public_key()\n    cipher = Cipher(algorithms.RSA(public_key), modes.OFB())\n    encryptor = cipher.encryptor()\n    encrypted = encryptor.update(data) + encryptor.finalize()\n    return encrypted\n\n# Function to decrypt data\n\ndef decrypt_data(private_key, encrypted_data):\n    cipher = Cipher(algorithms.RSA(private_key), modes.OFB())\n    decryptor = cipher.decryptor()\n    decrypted = decryptor.update(encrypted_data) + decryptor.finalize()\n    return decrypted",
+            "description": "Properly using RSA keys with appropriate length and secure encryption modes to ensure robust cryptographic protection."
+          }
+        ]
+      },
+      "rationale": "Ensuring that cryptographic keys are robust is crucial for maintaining the security of encrypted data. Weak or insecure keys can be exploited by attackers to recover plaintext data, leading to breaches of confidentiality, privacy violations, and potential legal consequences. By adhering to strong key management practices and using secure encryption algorithms, you help protect sensitive information and maintain trust in your data security measures."
+    },
+    {
+      "id": "R022",
+      "title": "Avoid Using Weak SSL/TLS Protocols",
+      "description": "Detects and prevents vulnerabilities related to the use of deprecated or weak SSL/TLS protocols to protect encrypted communications from attacks aiming to recover plaintext data.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "SSL/TLS",
+        "protocols",
+        "security",
+        "vulnerability",
+        "privacy"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-326: Inadequate Encryption Strength",
+      "examples": {
+        "positive": [
+          {
+            "code": "import ssl\n\n# Configure SSL/TLS context to use strong protocols\n\ndef create_ssl_context():\n    context = ssl.create_default_context()\n    context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # Disable TLSv1.0 and TLSv1.1\n    return context",
+            "description": "Configures SSL/TLS context to exclude weak protocols like TLSv1.0 and TLSv1.1, ensuring the use of stronger, secure protocols."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import ssl\n\n# Configure SSL/TLS context to use weak protocols\n\ndef create_ssl_context():\n    context = ssl.create_default_context()\n    context.options &= ~ssl.OP_NO_TLSv1 | ~ssl.OP_NO_TLSv1_1  # Allow TLSv1.0 and TLSv1.1\n    return context",
+            "description": "Enabling weak SSL/TLS protocols such as TLSv1.0 and TLSv1.1 can expose communications to attacks and should be avoided.",
+            "pattern": "context\\.options & ~ssl\\.OP_NO_TLSv1 | ~ssl\\.OP_NO_TLSv1_1"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Configure SSL/TLS connections to exclude deprecated and weak protocols such as SSL 1.0, 2.0, 3.0, and TLS 1.0, 1.1.",
+          "Use updated and secure SSL/TLS protocols like TLS 1.2 and TLS 1.3 to ensure strong encryption and protection.",
+          "Regularly review and update server configurations and libraries to adhere to the latest security standards and recommendations.",
+          "Conduct periodic security assessments to ensure that weak or deprecated protocols are not used and that encryption practices are up-to-date."
+        ],
+        "examples": [
+          {
+            "code": "import ssl\n\n# Configure SSL/TLS context to use strong protocols\n\ndef create_ssl_context():\n    context = ssl.create_default_context()\n    context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # Disable TLSv1.0 and TLSv1.1\n    return context",
+            "description": "Ensures SSL/TLS context is configured to use only strong, secure protocols by disabling outdated ones."
+          }
+        ]
+      },
+      "rationale": "Using weak or deprecated SSL/TLS protocols compromises the security of encrypted communications, making systems vulnerable to attacks that can expose plaintext data. By configuring systems to use strong and up-to-date protocols, you protect against potential breaches and ensure secure, reliable communication channels."
+    },
+    {
+      "id": "R023",
+      "title": "Verify Origins During Cross-Origin Communications",
+      "description": "Detects and prevents vulnerabilities related to cross-origin communications by ensuring that origins are properly verified to protect against unauthorized data access and actions.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "cross-origin",
+        "origin verification",
+        "security",
+        "vulnerability",
+        "privacy"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-345: Insufficient Verification of Data Authenticity",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, request, jsonify\n\napp = Flask(__name__)\n\n@app.route('/data', methods=['POST'])\ndef receive_data():\n    origin = request.headers.get('Origin')\n    if origin != 'https://trusted-domain.com':\n        return jsonify({'error': 'Unauthorized'}), 403\n    # Process the data\n    return jsonify({'status': 'success'})",
+            "description": "Verifies the origin of incoming requests and processes data only if the origin is from a trusted domain, protecting against unauthorized data access."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request, jsonify\n\napp = Flask(__name__)\n\n@app.route('/data', methods=['POST'])\ndef receive_data():\n    # No origin verification\n    # Process the data\n    return jsonify({'status': 'success'})",
+            "description": "Failure to verify the origin of incoming requests can lead to unauthorized access and manipulation of sensitive data.",
+            "pattern": "request\\.headers\\.get\\('Origin'\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Implement origin verification for cross-origin communications by checking the `Origin` or `Referer` header in incoming requests.",
+          "Configure your application to only accept requests from trusted domains and reject requests from untrusted or unexpected origins.",
+          "Regularly review and update origin verification logic to ensure it aligns with current security policies and practices.",
+          "Consider implementing additional security measures, such as CSRF tokens, to further protect against unauthorized actions."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, request, jsonify\n\napp = Flask(__name__)\n\n@app.route('/data', methods=['POST'])\ndef receive_data():\n    origin = request.headers.get('Origin')\n    if origin != 'https://trusted-domain.com':\n        return jsonify({'error': 'Unauthorized'}), 403\n    # Process the data\n    return jsonify({'status': 'success'})",
+            "description": "Ensures that cross-origin requests are only processed if they originate from trusted domains, thereby preventing unauthorized access."
+          }
+        ]
+      },
+      "rationale": "Verifying origins during cross-origin communications is essential to prevent unauthorized data access and actions. Without proper origin verification, attackers can exploit the vulnerability to gain access to sensitive information or perform actions on behalf of users without their consent. By implementing robust origin verification, you help safeguard against these risks and ensure secure interactions between websites."
+    },
+    {
+      "id": "R024",
+      "title": "Prevent Regular Expression Denial of Service (ReDoS)",
+      "description": "Detects and prevents vulnerabilities related to regular expressions that can be exploited to cause Denial of Service (DoS) attacks through catastrophic backtracking, ensuring that regex patterns are optimized and not prone to performance issues.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "regular expressions",
+        "DoS",
+        "performance",
+        "security",
+        "vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-1333: Improper Handling of High-Volume Requests",
+      "examples": {
+        "positive": [
+          {
+            "code": "import re\n\n# Optimized regex pattern to avoid catastrophic backtracking\npattern = re.compile(r'\\b\\w+\\b')\n\n# Function to match input using the regex\n\ndef match_input(input_string):\n    return pattern.findall(input_string)",
+            "description": "Uses a well-defined and optimized regex pattern to prevent excessive backtracking and mitigate potential DoS attacks."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import re\n\n# Vulnerable regex pattern prone to catastrophic backtracking\npattern = re.compile(r'(a+)+b')\n\n# Function to match input using the regex\n\ndef match_input(input_string):\n    return pattern.findall(input_string)",
+            "description": "Uses a regex pattern that can cause catastrophic backtracking, making it susceptible to DoS attacks.",
+            "pattern": "re\\.compile\\(r'(a\\+)+b'\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using regular expression patterns that involve nested quantifiers or excessive backtracking. For example, patterns with repeated quantifiers like `(a+)+` should be avoided.",
+          "Use regex patterns that are more efficient and predictable. For example, patterns without nested quantifiers or with clearly defined matching rules can reduce performance issues.",
+          "Consider using regex libraries or tools that include protections against catastrophic backtracking, or that provide features for limiting regex execution time or complexity.",
+          "Regularly review and test regular expressions to ensure they perform efficiently and do not expose the application to Denial of Service attacks."
+        ],
+        "examples": [
+          {
+            "code": "import re\n\n# Optimized regex pattern to avoid catastrophic backtracking\npattern = re.compile(r'\\b\\w+\\b')\n\n# Function to match input using the regex\n\ndef match_input(input_string):\n    return pattern.findall(input_string)",
+            "description": "Demonstrates the use of an optimized regex pattern that avoids complex backtracking scenarios, thereby reducing the risk of DoS attacks."
+          }
+        ]
+      },
+      "rationale": "Regular expressions with patterns prone to catastrophic backtracking can be exploited to cause Denial of Service attacks, which can impact the availability and performance of applications. By using well-optimized regex patterns and reviewing them regularly, you can prevent such vulnerabilities and ensure the robustness of your application's regex handling."
+    },
+    {
+      "id": "R025",
+      "title": "Restrict File Uploads to Trusted Directories",
+      "description": "Detects and prevents vulnerabilities related to unrestricted file uploads by ensuring that uploaded files are stored in a restricted and secure directory, preventing unauthorized access or execution of malicious files.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "file upload",
+        "security",
+        "restriction",
+        "vulnerability",
+        "access control"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-434: Unrestricted File Upload",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, request, abort\nimport os\n\napp = Flask(__name__)\nUPLOAD_FOLDER = '/secure/uploads'\n\n@app.route('/upload', methods=['POST'])\n\ndef upload_file():\n    if 'file' not in request.files:\n        abort(400, 'No file part')\n    file = request.files['file']\n    if file.filename == '':\n        abort(400, 'No selected file')\n    # Securely save the file to a restricted directory\n    file_path = os.path.join(UPLOAD_FOLDER, file.filename)\n    file.save(file_path)\n    return 'File uploaded successfully'",
+            "description": "Uploads files only to a secure and restricted directory, preventing unauthorized access or execution of uploaded files."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request\n\napp = Flask(__name__)\n\n@app.route('/upload', methods=['POST'])\n\ndef upload_file():\n    if 'file' not in request.files:\n        return 'No file part', 400\n    file = request.files['file']\n    if file.filename == '':\n        return 'No selected file', 400\n    # File is saved without directory restriction\n    file.save(file.filename)\n    return 'File uploaded successfully'",
+            "description": "Saving files directly without directory restrictions can expose the application to security risks, including unauthorized file access and potential server compromise.",
+            "pattern": "file\\.save\\(file\\.filename\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Configure the file upload feature to save files only to a secure, restricted directory that is not accessible from the web or other parts of the server.",
+          "Validate and sanitize file names and extensions to prevent unauthorized file types or paths from being uploaded.",
+          "Implement file type and size checks to prevent potentially malicious or oversized files from being uploaded.",
+          "Regularly review and audit file upload configurations and storage practices to ensure they adhere to current security standards and policies."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, request, abort\nimport os\n\napp = Flask(__name__)\nUPLOAD_FOLDER = '/secure/uploads'\n\n@app.route('/upload', methods=['POST'])\n\ndef upload_file():\n    if 'file' not in request.files:\n        abort(400, 'No file part')\n    file = request.files['file']\n    if file.filename == '':\n        abort(400, 'No selected file')\n    # Securely save the file to a restricted directory\n    file_path = os.path.join(UPLOAD_FOLDER, file.filename)\n    file.save(file_path)\n    return 'File uploaded successfully'",
+            "description": "Demonstrates secure file upload practices by saving files to a restricted directory to prevent unauthorized access."
+          }
+        ]
+      },
+      "rationale": "Unrestricted file uploads can lead to serious security vulnerabilities, including unauthorized file access, execution of malicious code, and server compromise. By implementing restrictions on where files can be uploaded and ensuring proper validation and sanitization, you can significantly mitigate these risks and protect your application from potential attacks."
+    },
+    {
+      "id": "R026",
+      "title": "Do Not Create Session Cookies from Untrusted Input",
+      "description": "Detects and prevents vulnerabilities related to session cookies that are created or influenced by untrusted data, protecting against session fixation and unauthorized session hijacking attacks.",
+      "impact": "Major",
+      "category": "Security",
+      "tags": [
+        "session management",
+        "cookie security",
+        "vulnerability",
+        "injection",
+        "access control"
+      ],
+      "severity": "Major",
+      "cwe": "CWE-350: Client-Server Spoofing",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, request, session\n\napp = Flask(__name__)\napp.secret_key = 'supersecretkey'\n\n@app.route('/login', methods=['POST'])\ndef login():\n    user = request.form.get('username')\n    if user:\n        session['user'] = user\n        return 'Logged in successfully'\n    return 'Login failed', 400",
+            "description": "Session cookies are created based on secure server-side logic and not influenced by untrusted input, ensuring proper session management and security."
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request, session\n\napp = Flask(__name__)\napp.secret_key = 'supersecretkey'\n\n@app.route('/login', methods=['POST'])\ndef login():\n    user = request.form.get('username')\n    # Vulnerable code: session creation based on untrusted input\n    session_id = request.args.get('cookie')\n    session['user'] = user\n    session['id'] = session_id\n    return 'Logged in successfully'",
+            "description": "Session cookies are influenced by untrusted input, such as a URL parameter, making the application vulnerable to session fixation and hijacking attacks.",
+            "pattern": "request\\.args\\.get\\('cookie'\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that session cookies are only created or modified using trusted and secure server-side logic, and not based on user input or query parameters.",
+          "Implement proper session management practices, including generating and validating session identifiers securely.",
+          "Regularly review session handling code to ensure that session creation and modification are not influenced by untrusted or external input.",
+          "Consider using frameworks or libraries that handle session management securely and follow best practices for session security."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, request, session\n\napp = Flask(__name__)\napp.secret_key = 'supersecretkey'\n\n@app.route('/login', methods=['POST'])\ndef login():\n    user = request.form.get('username')\n    if user:\n        session['user'] = user\n        return 'Logged in successfully'\n    return 'Login failed', 400",
+            "description": "Ensures that session cookies are created and managed based on secure server-side logic, avoiding vulnerabilities related to untrusted input."
+          }
+        ]
+      },
+      "rationale": "Creating session cookies from untrusted input can lead to serious security issues, such as session fixation and unauthorized session hijacking. By ensuring that session cookies are managed securely and not influenced by external input, you can prevent these vulnerabilities and protect the integrity of user sessions."
+    },
+    {
+      "id": "R027",
+      "title": "Prevent Server-Side Request Forgery (SSRF)",
+      "description": "Detects and prevents vulnerabilities related to Server-Side Request Forgery (SSRF), ensuring that server-side requests are not influenced by untrusted or malicious inputs, which can lead to unauthorized data access or system compromise.",
+      "impact": "Major",
+      "category": "Security",
+      "tags": [
+        "server-side request forgery",
+        "SSRF",
+        "security",
+        "vulnerability",
+        "data access"
+      ],
+      "severity": "Major",
+      "cwe": "CWE-918: Server-Side Request Forgery (SSRF)",
+      "examples": {
+        "positive": [
+          {
+            "code": "from flask import Flask, request\nimport requests\n\napp = Flask(__name__)\n\n@app.route('/fetch', methods=['POST'])\ndef fetch_data():\n    url = request.form.get('url')\n    if not url.startswith('https://trusted-domain.com'):\n        return 'Invalid URL', 400\n    response = requests.get(url)\n    return response.text",
+            "description": "Server-side requests are restricted to a trusted domain, preventing unauthorized or potentially malicious requests.",
+            "pattern": "url\\.startswith\\('https://trusted-domain\\.com'\\)"
+          }
+        ],
+        "negative": [
+          {
+            "code": "from flask import Flask, request\nimport requests\n\napp = Flask(__name__)\n\n@app.route('/fetch', methods=['POST'])\ndef fetch_data():\n    url = request.form.get('url')\n    response = requests.get(url)\n    return response.text",
+            "description": "Server-side requests are directly influenced by user input, making the application vulnerable to SSRF attacks by allowing requests to arbitrary URLs.",
+            "pattern": "requests\\.get\\(url\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Validate and sanitize input URLs to ensure that server-side requests are only made to trusted domains or endpoints.",
+          "Implement allow-lists for acceptable URLs or domains and block any requests that do not meet the criteria.",
+          "Avoid making server-side requests based on user input or query parameters unless strictly necessary, and ensure robust validation is in place.",
+          "Regularly review and audit request handling code to ensure that it does not expose the application to SSRF vulnerabilities."
+        ],
+        "examples": [
+          {
+            "code": "from flask import Flask, request\nimport requests\n\napp = Flask(__name__)\n\n@app.route('/fetch', methods=['POST'])\ndef fetch_data():\n    url = request.form.get('url')\n    if not url.startswith('https://trusted-domain.com'):\n        return 'Invalid URL', 400\n    response = requests.get(url)\n    return response.text",
+            "description": "Demonstrates secure handling of server-side requests by validating URLs against a trusted domain, thereby mitigating the risk of SSRF attacks."
+          }
+        ]
+      },
+      "rationale": "Server-Side Request Forgery (SSRF) vulnerabilities can lead to unauthorized data access, internal network reconnaissance, or remote command execution. By validating and restricting URLs or endpoints for server-side requests, you can prevent these attacks and enhance the security of your application."
+    },
+    {
+      "id": "R028",
+      "title": "Restrict Administration Services Access to Specific IP Addresses",
+      "description": "Detects and prevents vulnerabilities related to unrestricted access to administration services. Ensures that access to critical services is restricted to specific IP addresses to prevent unauthorized access and potential exploitation.",
+      "impact": "Minor",
+      "category": "Security",
+      "tags": [
+        "access control",
+        "firewall",
+        "administration services",
+        "security",
+        "IP restriction"
+      ],
+      "severity": "Minor",
+      "cwe": "CWE-94: Improper Control of Generation of Code ('Code Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import boto3\n\n# Create an EC2 client\nclient = boto3.client('ec2')\n\n# Define the security group and IP addresses\nsecurity_group_id = 'sg-0123456789abcdef0'\nallowed_ips = ['203.0.113.0/24', '198.51.100.0/24']\n\n# Update the security group to allow SSH access only from specific IPs\nclient.authorize_security_group_ingress(\n    GroupId=security_group_id,\n    IpPermissions=[\n        {\n            'IpProtocol': 'tcp',\n            'FromPort': 22,\n            'ToPort': 22,\n            'IpRanges': [{'CidrIp': ip} for ip in allowed_ips]\n        }\n    ]\n)",
+            "description": "Updates the security group rules to restrict SSH access to specified IP addresses, preventing unauthorized access to administration services."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import boto3\n\n# Create an EC2 client\nclient = boto3.client('ec2')\n\n# Define the security group and allow all IP addresses for SSH\nsecurity_group_id = 'sg-0123456789abcdef0'\n\n# Update the security group to allow SSH access from all IPs\nclient.authorize_security_group_ingress(\n    GroupId=security_group_id,\n    IpPermissions=[\n        {\n            'IpProtocol': 'tcp',\n            'FromPort': 22,\n            'ToPort': 22,\n            'IpRanges': [{'CidrIp': '0.0.0.0/0'}]\n        }\n    ]\n)",
+            "description": "Allows SSH access from all IP addresses, exposing administration services to potential unauthorized access and exploitation.",
+            "pattern": "'CidrIp': '0.0.0.0/0'"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Configure firewalls or security groups to restrict access to administration services (such as SSH, RDP, etc.) to specific IP addresses or address ranges.",
+          "Regularly review and update IP restrictions to ensure that only authorized IPs have access to critical services.",
+          "Implement logging and monitoring to detect and respond to unauthorized access attempts or changes to firewall rules.",
+          "Consider using multi-factor authentication (MFA) and other security measures in conjunction with IP restrictions to enhance protection."
+        ],
+        "examples": [
+          {
+            "code": "import boto3\n\n# Create an EC2 client\nclient = boto3.client('ec2')\n\n# Define the security group and IP addresses\nsecurity_group_id = 'sg-0123456789abcdef0'\nallowed_ips = ['203.0.113.0/24', '198.51.100.0/24']\n\n# Update the security group to allow SSH access only from specific IPs\nclient.authorize_security_group_ingress(\n    GroupId=security_group_id,\n    IpPermissions=[\n        {\n            'IpProtocol': 'tcp',\n            'FromPort': 22,\n            'ToPort': 22,\n            'IpRanges': [{'CidrIp': ip} for ip in allowed_ips]\n        }\n    ]\n)",
+            "description": "Demonstrates secure configuration of firewall rules to restrict access to administration services to specific IP addresses."
+          }
+        ]
+      },
+      "rationale": "Allowing unrestricted access to administration services can expose critical systems to unauthorized access and exploitation. By restricting access to specific IP addresses and implementing additional security measures, you can significantly reduce the risk of unauthorized access and protect sensitive administration services."
+    },
+    {
+      "id": "R029",
+      "title": "Prevent OS Command Argument Injections",
+      "description": "Detects and prevents vulnerabilities related to OS command argument injections. Ensures that applications do not allow the execution of operating system commands with untrusted arguments, which could lead to unintended command execution or system compromise.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": [
+        "command injection",
+        "OS command",
+        "security",
+        "argument injection"
+      ],
+      "severity": "Critical",
+      "cwe": "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "import subprocess\n\n# Example of safe usage with subprocess\ndef execute_command(command_args):\n    # Use a list to specify command and arguments safely\n    process = subprocess.Popen([\"ls\", \"-l\"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n    output, error = process.communicate()\n    return output\n\n# Call with fixed arguments\nresult = execute_command([])\nprint(result)",
+            "description": "Uses `subprocess.Popen` with a fixed list of arguments, avoiding direct injection of untrusted input into OS commands."
+          }
+        ],
+        "negative": [
+          {
+            "code": "import subprocess\n\n# Example of unsafe usage with subprocess\ndef execute_command(command_args):\n    # Dangerous: injecting user input directly into command string\n    process = subprocess.Popen(f'ls -l {command_args}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n    output, error = process.communicate()\n    return output\n\n# Call with untrusted input\nresult = execute_command('; rm -rf /')\nprint(result)",
+            "description": "Directly injects untrusted input into an OS command, allowing for arbitrary command execution and potential system compromise.",
+            "pattern": "shell=True"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using shell=True in subprocess calls. Instead, use a list of arguments to prevent command injection.",
+          "Sanitize and validate all inputs that are used in OS commands to ensure they do not contain harmful content.",
+          "Implement proper access control and least privilege principles to limit the potential impact of any command injections.",
+          "Regularly audit and review code to identify and mitigate command injection vulnerabilities."
+        ],
+        "examples": [
+          {
+            "code": "import subprocess\n\n# Example of secure usage\n\ndef execute_command(command_args):\n    # Safe execution with a fixed command and sanitized arguments\n    process = subprocess.Popen([\"ls\", \"-l\"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n    output, error = process.communicate()\n    return output\n\n# Call with validated arguments\nresult = execute_command([])\nprint(result)",
+            "description": "Demonstrates secure usage of `subprocess.Popen` with a list of arguments and no shell expansion, reducing the risk of command injection."
+          }
+        ]
+      },
+      "rationale": "OS command argument injections can lead to severe security issues, including unauthorized access, data leaks, and system compromise. By preventing the direct injection of untrusted input into OS commands and adhering to secure coding practices, you can significantly mitigate these risks and enhance the security of your application."
+    },
+    {
+      "id": "R030",
+      "title": "Avoid Using Web SQL Databases",
+      "description": "Detects and prevents the use of Web SQL databases, which are deprecated and pose security concerns. Web SQL is no longer supported and should be replaced with alternatives like IndexedDB.",
+      "impact": "Blocker",
+      "category": "Security",
+      "tags": [
+        "Web SQL",
+        "security",
+        "deprecation",
+        "database"
+      ],
+      "severity": "Blocker",
+      "cwe": "CWE-922: Insecure Storage of Sensitive Information",
+      "examples": {
+        "positive": [
+          {
+            "code": "import sqlite3\n\n# Example of using SQLite3 in Python\n\ndef create_database():\n    conn = sqlite3.connect('example.db')\n    c = conn.cursor()\n    c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)''')\n    conn.commit()\n    conn.close()\n\ncreate_database()",
+            "description": "Demonstrates the use of SQLite, a suitable alternative to Web SQL, for secure and consistent database operations in Python."
+          }
+        ],
+        "negative": [
+          {
+            "code": "var db = window.openDatabase(\"myDb\", \"1.0\", \"Personal secrets stored here\", 2*1024*1024);  // Noncompliant",
+            "description": "Shows an example of using Web SQL, which is deprecated and poses security risks. Web SQL databases should be avoided."
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Replace Web SQL with a supported and secure alternative, such as IndexedDB or local storage mechanisms that align with modern web standards.",
+          "Review and refactor code to ensure no use of deprecated Web SQL database methods.",
+          "Update documentation and codebases to reflect the transition away from Web SQL databases.",
+          "Implement security practices such as encryption and access controls to protect sensitive data in the new database solutions."
+        ],
+        "examples": [
+          {
+            "code": "import sqlite3\n\n# Example of using SQLite3 in Python\n\ndef create_database():\n    conn = sqlite3.connect('example.db')\n    c = conn.cursor()\n    c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)''')\n    conn.commit()\n    conn.close()\n\ncreate_database()",
+            "description": "Demonstrates the use of SQLite as an alternative to Web SQL for database operations in Python."
+          }
+        ]
+      },
+      "rationale": "Web SQL databases are deprecated and pose significant security risks. They are no longer supported across all major browsers, which can lead to compatibility issues and data exposure. Transitioning to supported and secure alternatives like IndexedDB helps ensure data integrity and security, and aligns with current web standards."
+    }
+  ]
+}
