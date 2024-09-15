@@ -6,7 +6,1333 @@
         "pattern": "\\beval\\s*\\(",
         "severity": "high",
         "recommendation": "Avoid using eval() as it can lead to code injection vulnerabilities. Use safer alternatives such as JSON.parse() for parsing JSON."
+      },{
+  "rules": [
+    {
+      "id": "JS001",
+      "title": "Avoid Open Redirect Vulnerabilities",
+      "description": "Detects instances where user-controllable data is used to build URLs for redirects, potentially leading to open redirect vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["open redirect", "security", "vulnerability", "phishing"],
+      "severity": "Blocker",
+      "cwe": "CWE-601: URL Redirection to Untrusted Site ('Open Redirect')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const redirectUrl = '/home';\nres.redirect(redirectUrl);",
+            "description": "Using a fixed URL for redirection."
+          },
+          {
+            "code": "const redirectUrl = getSafeRedirectUrl(req.query.url);\nres.redirect(redirectUrl);",
+            "description": "Validating and sanitizing the user-controllable URL before redirecting."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const redirectUrl = req.query.url;\nres.redirect(redirectUrl);",
+            "description": "Using user-controllable data directly for redirection, leading to potential open redirect vulnerability.",
+            "pattern": "res\\.redirect\\(req\\.[a-zA-Z0-9]+\\.url\\);"
+          }
+        ]
       },
+      "fix": {
+        "steps": [
+          "Avoid using user-controllable data directly for redirection.",
+          "Validate and sanitize any user input used for constructing URLs.",
+          "Use a predefined set of allowed URLs or implement a whitelist of safe URLs."
+        ],
+        "examples": [
+          {
+            "code": "const redirectUrl = getSafeRedirectUrl(req.query.url);\nres.redirect(redirectUrl);",
+            "description": "Validating and sanitizing the user-controllable URL before redirecting."
+          }
+        ]
+      },
+      "rationale": "Open redirect vulnerabilities can be exploited by attackers to redirect users to malicious sites, leading to phishing attacks, malware distribution, and JavaScript injection (XSS). Ensuring that URLs used for redirection are validated and sanitized helps protect against these threats."
+    },
+    {
+      "id": "JS002",
+      "title": "Avoid Zip Slip Vulnerabilities",
+      "description": "Detects instances where archive entries are extracted without validating their paths, potentially leading to Zip Slip vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["zip slip", "security", "path traversal", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const extract = require('extract-zip');\nconst path = require('path');\nconst destPath = path.resolve('/path/to/extract');\nextract('/path/to/archive.zip', { dir: destPath }).then(() => {\n  console.log('Extraction complete');\n});",
+            "description": "Uses a library that handles path validation correctly."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const unzipper = require('unzipper');\nconst fs = require('fs');\nfs.createReadStream('archive.zip').pipe(unzipper.Extract({ path: '/path/to/extract' }));",
+            "description": "Extracts files from a zip archive without validating paths, leading to potential Zip Slip vulnerability.",
+            "pattern": "(fs\\.createReadStream\\('.*'\\)\\.pipe\\(unzipper\\.Extract\\({ path: '.*' }\\)\\))"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Validate the paths of all archive entries before extraction.",
+          "Use libraries that handle path validation securely.",
+          "Avoid extracting files to locations outside the intended directory."
+        ],
+        "examples": [
+          {
+            "code": "const extract = require('extract-zip');\nconst path = require('path');\nconst destPath = path.resolve('/path/to/extract');\nextract('/path/to/archive.zip', { dir: destPath }).then(() => {\n  console.log('Extraction complete');\n});",
+            "description": "Uses a library that handles path validation correctly."
+          },
+          {
+            "code": "const path = require('path');\nconst fs = require('fs');\nconst unzipper = require('unzipper');\nconst destPath = path.resolve('/path/to/extract');\nfs.createReadStream('archive.zip').pipe(unzipper.Parse()).on('entry', entry => {\n  const filePath = path.join(destPath, entry.path);\n  if (!filePath.startsWith(destPath)) {\n    console.error('Zip Slip detected:', entry.path);\n    return;\n  }\n  entry.pipe(fs.createWriteStream(filePath));\n});",
+            "description": "Manually validates paths to prevent Zip Slip vulnerability."
+          }
+        ]
+      },
+      "rationale": "Zip Slip vulnerabilities can lead to severe security issues, including arbitrary file overwrite and potential code execution. It is essential to validate paths during archive extraction to prevent these attacks."
+    },
+    {
+      "id": "JS003",
+      "title": "Avoid DOM-Based Cross-Site Scripting (XSS)",
+      "description": "Detects instances where user-controllable data is used directly in dangerous DOM operations, potentially leading to DOM-based XSS vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["xss", "security", "injection", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const userInput = getUserInput();\ndocument.getElementById('output').textContent = userInput;",
+            "description": "Uses textContent to safely insert user input into the DOM, avoiding the risk of XSS."
+          },
+          {
+            "code": "const userInput = getUserInput();\ndocument.getElementById('output').innerHTML = sanitize(userInput);",
+            "description": "Sanitizes user input before inserting it into the DOM using innerHTML."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const userInput = getUserInput();\ndocument.getElementById('output').innerHTML = userInput;",
+            "description": "Directly inserts user input into the DOM using innerHTML, leading to potential XSS vulnerability.",
+            "pattern": "document\\.getElementById\\('.*'\\)\\.innerHTML\\s*=\\s*.*;"
+          },
+          {
+            "code": "const userInput = location.search;\neval(userInput);",
+            "description": "Uses eval with user input from the URL, leading to potential XSS vulnerability.",
+            "pattern": "eval\\(.*location\\.search.*\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using dangerous functions such as innerHTML, eval, and others that can execute user input as code.",
+          "Use textContent or innerText to safely insert user data into the DOM.",
+          "Sanitize user input before inserting it into the DOM using libraries such as DOMPurify."
+        ],
+        "examples": [
+          {
+            "code": "const userInput = getUserInput();\ndocument.getElementById('output').textContent = userInput;",
+            "description": "Uses textContent to safely insert user input into the DOM, avoiding the risk of XSS."
+          },
+          {
+            "code": "const userInput = getUserInput();\ndocument.getElementById('output').innerHTML = sanitize(userInput);",
+            "description": "Sanitizes user input before inserting it into the DOM using innerHTML."
+          }
+        ]
+      },
+      "rationale": "DOM-based XSS vulnerabilities can lead to severe security issues, including website defacement, user impersonation, and theft of sensitive data. It is essential to handle user input securely to prevent these attacks."
+    },
+    {
+      "id": "JS004",
+      "title": "Avoid Dynamic Code Execution Vulnerabilities",
+      "description": "Detects instances where user-controllable data is used directly in functions that execute dynamic code, potentially leading to injection vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["code injection", "security", "dynamic code execution", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-94: Improper Control of Generation of Code ('Code Injection')",
+      "reference_link":"https://cwe.mitre.org/data/definitions/94.html",
+      "examples": {
+        "positive": [
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nsecureFunction(sanitizedInput);",
+            "description": "Sanitizes user input before passing it to a function that may execute code."
+          },
+          {
+            "code": "const userInput = getUserInput();\nif (isValidInput(userInput)) {\n  safeFunction(userInput);\n}",
+            "description": "Validates user input before using it in a function."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const userInput = getUserInput();\neval(userInput);",
+            "description": "Uses eval with user input, leading to potential code injection vulnerability.",
+            "pattern": "eval\\(.*\\);"
+          },
+          {
+            "code": "const userInput = getUserInput();\nnew Function(userInput)();",
+            "description": "Uses new Function with user input, leading to potential code injection vulnerability.",
+            "pattern": "new Function\\(.*\\)\\(\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using functions that execute dynamic code such as eval, new Function, setTimeout, and setInterval with user input.",
+          "Sanitize and validate user input before passing it to any functions.",
+          "Use safer alternatives for dynamic code execution where possible."
+        ],
+        "examples": [
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nsecureFunction(sanitizedInput);",
+            "description": "Sanitizes user input before passing it to a function that may execute code."
+          },
+          {
+            "code": "const userInput = getUserInput();\nif (isValidInput(userInput)) {\n  safeFunction(userInput);\n}",
+            "description": "Validates user input before using it in a function."
+          }
+        ]
+      },
+      "rationale": "Dynamic code execution vulnerabilities can lead to severe security issues, including arbitrary code execution, data leaks, and privilege escalation. It is essential to handle user input securely and avoid dangerous functions that execute dynamic code."
+    },  
+    {
+      "id": "JS005",
+      "title": "Avoid NoSQL Injection Vulnerabilities",
+      "description": "Detects instances where user-controllable data is used directly in NoSQL queries, potentially leading to injection vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["nosql injection", "security", "injection", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-943: Improper Neutralization of Special Elements in Data Query Logic",
+      "examples": {
+        "positive": [
+          {
+            "code": "const userInput = getUserInput();\nconst query = { username: userInput };",
+            "description": "Safely constructs a NoSQL query using user input."
+          },
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nconst query = { username: sanitizedInput };",
+            "description": "Sanitizes user input before using it in a NoSQL query."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const userInput = getUserInput();\nconst query = { username: userInput, password: { $ne: '' } };",
+            "description": "Uses user input directly in a NoSQL query, leading to potential injection vulnerability.",
+            "pattern": "{.*:.*\\$.*:.*}"
+          },
+          {
+            "code": "const userInput = getUserInput();\ndb.collection('users').find({ username: userInput }).toArray();",
+            "description": "Uses user input directly in a NoSQL query, leading to potential injection vulnerability.",
+            "pattern": "db\\.collection\\('.*'\\)\\.find\\({.*:.*}\\)\\.toArray\\(\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using user input directly in NoSQL queries.",
+          "Sanitize and validate user input before using it in any database queries.",
+          "Use parameterized queries or other secure methods provided by the NoSQL database."
+        ],
+        "examples": [
+          {
+            "code": "const userInput = getUserInput();\nconst query = { username: userInput };",
+            "description": "Safely constructs a NoSQL query using user input."
+          },
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nconst query = { username: sanitizedInput };",
+            "description": "Sanitizes user input before using it in a NoSQL query."
+          }
+        ]
+      },
+      "rationale": "NoSQL injection vulnerabilities can lead to severe security issues, including identity spoofing, data leakage, and data deletion. It is essential to handle user input securely and avoid dangerous query constructions that can lead to injection attacks."
+    },
+    {
+      "id": "JS006",
+      "title": "Avoid Open Redirection Vulnerabilities",
+      "description": "Detects instances where user-controllable data is used directly in HTTP redirections, potentially leading to open redirection vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["open redirection", "security", "injection", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-601: URL Redirection to Untrusted Site ('Open Redirect')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const safeRedirect = '/home';\nres.redirect(safeRedirect);",
+            "description": "Uses a hardcoded, safe redirect URL."
+          },
+          {
+            "code": "const allowedUrls = ['/home', '/profile'];\nconst redirectUrl = getRedirectUrl();\nif (allowedUrls.includes(redirectUrl)) {\n  res.redirect(redirectUrl);\n} else {\n  res.redirect('/home');\n}",
+            "description": "Validates the redirect URL against a whitelist of allowed URLs."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const redirectUrl = req.query.url;\nres.redirect(redirectUrl);",
+            "description": "Uses user input directly for the redirect URL, leading to potential open redirection vulnerability.",
+            "pattern": "res\\.redirect\\(.*req\\.query\\.url.*\\);"
+          },
+          {
+            "code": "const redirectUrl = req.body.url;\nres.redirect(redirectUrl);",
+            "description": "Uses user input from the request body directly for the redirect URL, leading to potential open redirection vulnerability.",
+            "pattern": "res\\.redirect\\(.*req\\.body\\.url.*\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using user input directly in HTTP redirection URLs.",
+          "Sanitize and validate user input before using it in any redirect URLs.",
+          "Use a whitelist of allowed redirect URLs and validate user input against this list."
+        ],
+        "examples": [
+          {
+            "code": "const safeRedirect = '/home';\nres.redirect(safeRedirect);",
+            "description": "Uses a hardcoded, safe redirect URL."
+          },
+          {
+            "code": "const allowedUrls = ['/home', '/profile'];\nconst redirectUrl = getRedirectUrl();\nif (allowedUrls.includes(redirectUrl)) {\n  res.redirect(redirectUrl);\n} else {\n  res.redirect('/home');\n}",
+            "description": "Validates the redirect URL against a whitelist of allowed URLs."
+          }
+        ]
+      },
+      "rationale": "Open redirection vulnerabilities can lead to severe security issues, including phishing attacks, malware distribution, and credential theft. It is essential to handle user input securely and avoid using it directly in HTTP redirections."
+    },
+    {
+      "id": "JS007",
+      "title": "Avoid Reflected Cross-Site Scripting (XSS) Vulnerabilities",
+      "description": "Detects instances where user-controllable data is used directly in HTTP responses without proper sanitization, potentially leading to reflected XSS vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["xss", "security", "injection", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nres.send(`<div>${sanitizedInput}</div>`);",
+            "description": "Sanitizes user input before inserting it into the HTTP response."
+          },
+          {
+            "code": "const userInput = getUserInput();\nres.send(`<div>${encodeURIComponent(userInput)}</div>`);",
+            "description": "Encodes user input before inserting it into the HTTP response."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const userInput = req.query.input;\nres.send(`<div>${userInput}</div>`);",
+            "description": "Uses user input directly in the HTTP response, leading to potential reflected XSS vulnerability.",
+            "pattern": "res\\.send\\(`.*${.*req\\.query.*}.*`\\);"
+          },
+          {
+            "code": "const userInput = req.body.input;\nres.send(`<div>${userInput}</div>`);",
+            "description": "Uses user input from the request body directly in the HTTP response, leading to potential reflected XSS vulnerability.",
+            "pattern": "res\\.send\\(`.*${.*req\\.body.*}.*`\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using user input directly in HTTP responses.",
+          "Sanitize and validate user input before using it in any HTTP response.",
+          "Use encoding functions to escape any potentially harmful characters in user input."
+        ],
+        "examples": [
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nres.send(`<div>${sanitizedInput}</div>`);",
+            "description": "Sanitizes user input before inserting it into the HTTP response."
+          },
+          {
+            "code": "const userInput = getUserInput();\nres.send(`<div>${encodeURIComponent(userInput)}</div>`);",
+            "description": "Encodes user input before inserting it into the HTTP response."
+          }
+        ]
+      },
+      "rationale": "Reflected cross-site scripting (XSS) vulnerabilities can lead to severe security issues, including session hijacking, data theft, and defacement. It is essential to handle user input securely and avoid using it directly in HTTP responses without proper sanitization or encoding."
+    },
+    {
+      "id": "JS008",
+      "title": "Avoid Database Injection Vulnerabilities",
+      "description": "Detects instances where user-controllable data is used directly in database queries without proper sanitization, potentially leading to database injection vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["sql injection", "nosql injection", "security", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const userInput = getUserInput();\nconst query = 'SELECT * FROM users WHERE username = ?';\ndb.query(query, [userInput], (err, results) => { /* handle results */ });",
+            "description": "Uses parameterized queries to prevent SQL injection."
+          },
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nconst query = `SELECT * FROM users WHERE username = '${sanitizedInput}'`;\ndb.query(query, (err, results) => { /* handle results */ });",
+            "description": "Sanitizes user input before using it in a database query."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const userInput = req.query.username;\nconst query = `SELECT * FROM users WHERE username = '${userInput}'`;\ndb.query(query, (err, results) => { /* handle results */ });",
+            "description": "Uses user input directly in an SQL query, leading to potential SQL injection vulnerability.",
+            "pattern": "db\\.query\\(`.*${userInput}.*`\\);"
+          },
+          {
+            "code": "const userInput = req.body.username;\nconst query = `SELECT * FROM users WHERE username = '${userInput}'`;\ndb.query(query, (err, results) => { /* handle results */ });",
+            "description": "Uses user input from the request body directly in an SQL query, leading to potential SQL injection vulnerability.",
+            "pattern": "db\\.query\\(`.*${userInput}.*`\\);"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using user input directly in database queries.",
+          "Use parameterized queries or prepared statements to safely handle user input.",
+          "Sanitize and validate user input before using it in any database queries."
+        ],
+        "examples": [
+          {
+            "code": "const userInput = getUserInput();\nconst query = 'SELECT * FROM users WHERE username = ?';\ndb.query(query, [userInput], (err, results) => { /* handle results */ });",
+            "description": "Uses parameterized queries to prevent SQL injection."
+          },
+          {
+            "code": "const userInput = getUserInput();\nconst sanitizedInput = sanitize(userInput);\nconst query = `SELECT * FROM users WHERE username = '${sanitizedInput}'`;\ndb.query(query, (err, results) => { /* handle results */ });",
+            "description": "Sanitizes user input before using it in a database query."
+          }
+        ]
+      },
+      "rationale": "Database injection vulnerabilities can lead to severe security issues, including unauthorized data access, data manipulation, and denial of service. It is essential to handle user input securely and avoid direct usage in database queries to prevent injection attacks."
+    },
+    {
+      "id": "JS009",
+      "title": "Avoid XML External Entity (XXE) Vulnerabilities",
+      "description": "Detects instances where XML parsers allow the usage of external entities, which can lead to XML External Entity (XXE) vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["xxe", "xml", "security", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const parser = new DOMParser();\nparser.setProperty('http://xml.org/sax/features/external-general-entities', false);\nparser.setProperty('http://xml.org/sax/features/external-parameter-entities', false);\nconst xml = '<root><element>Data</element></root>';\nconst doc = parser.parseFromString(xml, 'application/xml');",
+            "description": "Disables external entity processing to prevent XXE attacks."
+          },
+          {
+            "code": "const parser = new DOMParser();\nconst xml = '<root><element>Data</element></root>';\nconst doc = parser.parseFromString(xml, 'application/xml');\n// External entities are not enabled by default",
+            "description": "Using XML parser with default settings that do not process external entities."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const parser = new DOMParser();\nconst xml = '<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"file:///etc/passwd\"> ]><root>&xxe;</root>';\nconst doc = parser.parseFromString(xml, 'application/xml');",
+            "description": "Allows external entities in XML, leading to potential XXE vulnerability.",
+            "pattern": "<!ENTITY .* SYSTEM .*"
+          },
+          {
+            "code": "const parser = new DOMParser();\nconst xml = '<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"http://malicious.example.com/malicious.dtd\"> ]><root>&xxe;</root>';\nconst doc = parser.parseFromString(xml, 'application/xml');",
+            "description": "Allows external entities in XML which can be used for SSRF or other attacks.",
+            "pattern": "<!ENTITY .* SYSTEM .*http://.*>"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Disable external entity processing in XML parsers to mitigate XXE vulnerabilities.",
+          "Use XML parsers and libraries that do not process external entities by default.",
+          "Sanitize and validate XML input to ensure it does not contain harmful entities or constructs."
+        ],
+        "examples": [
+          {
+            "code": "const parser = new DOMParser();\nparser.setProperty('http://xml.org/sax/features/external-general-entities', false);\nparser.setProperty('http://xml.org/sax/features/external-parameter-entities', false);\nconst xml = '<root><element>Data</element></root>';\nconst doc = parser.parseFromString(xml, 'application/xml');",
+            "description": "Disables external entity processing in the parser configuration."
+          },
+          {
+            "code": "const parser = new DOMParser();\nconst xml = '<root><element>Data</element></root>';\nconst doc = parser.parseFromString(xml, 'application/xml');",
+            "description": "Using XML parser with default settings that are safe against XXE attacks."
+          }
+        ]
+      },
+      "rationale": "XXE vulnerabilities can lead to severe security issues, including unauthorized access to sensitive data, resource exhaustion, and server-side request forgery (SSRF). Properly configuring XML parsers to disable external entities and validating XML input is crucial for preventing these attacks."
+    },
+    {
+      "id": "JS010",
+      "title": "Avoid Path Injection Vulnerabilities",
+      "description": "Detects instances where untrusted user input is used to construct file paths, potentially leading to path injection vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["path injection", "file system", "security", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-36: Absolute Path Traversal",
+      "examples": {
+        "positive": [
+          {
+            "code": "const path = require('path');\nconst userFile = sanitizeUserInput(req.query.file);\nconst filePath = path.resolve(__dirname, 'uploads', userFile);\nfs.readFile(filePath, (err, data) => { /* handle file data */ });",
+            "description": "Sanitizes user input and resolves the file path to prevent path traversal."
+          },
+          {
+            "code": "const userFile = sanitize(req.body.file);\nconst filePath = `/safe/path/${userFile}`;\nfs.readFile(filePath, (err, data) => { /* handle file data */ });",
+            "description": "Sanitizes user input before using it to construct file paths."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const filePath = `/uploads/${req.query.file}`;\nfs.readFile(filePath, (err, data) => { /* handle file data */ });",
+            "description": "Directly uses user input to construct file paths, potentially leading to path injection attacks.",
+            "pattern": "`/uploads/${req.query.file}`"
+          },
+          {
+            "code": "const filePath = `/data/${req.body.file}`;\nfs.readFile(filePath, (err, data) => { /* handle file data */ });",
+            "description": "Directly uses user input from the request body in file paths, leading to potential path injection vulnerabilities.",
+            "pattern": "`/data/${req.body.file}`"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Sanitize and validate user input before using it to construct file paths.",
+          "Use secure functions and libraries that help prevent path injection attacks.",
+          "Resolve file paths to absolute paths and ensure they stay within a designated directory."
+        ],
+        "examples": [
+          {
+            "code": "const path = require('path');\nconst userFile = sanitizeUserInput(req.query.file);\nconst filePath = path.resolve(__dirname, 'uploads', userFile);\nfs.readFile(filePath, (err, data) => { /* handle file data */ });",
+            "description": "Sanitizes and resolves the file path to ensure it is within a safe directory."
+          },
+          {
+            "code": "const userFile = sanitize(req.body.file);\nconst filePath = `/safe/path/${userFile}`;\nfs.readFile(filePath, (err, data) => { /* handle file data */ });",
+            "description": "Sanitizes user input and constructs file paths carefully to avoid injection attacks."
+          }
+        ]
+      },
+      "rationale": "Path injection vulnerabilities can lead to severe security issues, including unauthorized file access, file deletion, and system compromise. Ensuring that user input is properly sanitized and that file paths are securely constructed is essential for preventing these attacks."
+    },      
+    {
+      "id": "JS011",
+      "title": "Avoid OS Command Injection Vulnerabilities",
+      "description": "Detects instances where untrusted user input is used to construct and execute OS commands, potentially leading to command injection vulnerabilities.",
+      "impact": "High",
+      "category": "Security",
+      "tags": ["command injection", "os command", "security", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const { execFile } = require('child_process');\nconst userCommand = sanitizeUserInput(req.query.command);\nexecFile('/usr/bin/safe-command', [userCommand], (error, stdout, stderr) => { /* handle output */ });",
+            "description": "Sanitizes user input and uses `execFile` to avoid shell command injection."
+          },
+          {
+            "code": "const { spawn } = require('child_process');\nconst userArgs = sanitizeUserInput(req.body.args);\nconst process = spawn('safe-command', [userArgs]);\nprocess.stdout.on('data', (data) => { /* handle output */ });",
+            "description": "Sanitizes user input and uses `spawn` to avoid shell command injection."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const exec = require('child_process').exec;\nconst command = `ls ${req.query.dir}`;\nexec(command, (error, stdout, stderr) => { /* handle output */ });",
+            "description": "Directly uses user input to construct a command line, leading to potential command injection vulnerabilities.",
+            "pattern": "`ls ${req.query.dir}`"
+          },
+          {
+            "code": "const exec = require('child_process').exec;\nconst command = `rm -rf ${req.body.path}`;\nexec(command, (error, stdout, stderr) => { /* handle output */ });",
+            "description": "Directly uses user input from the request body in command line construction, leading to potential command injection vulnerabilities.",
+            "pattern": "`rm -rf ${req.body.path}`"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid constructing OS command lines from untrusted user input.",
+          "Use safer APIs such as `execFile` or `spawn` from the `child_process` module to handle OS commands, which provide better control over arguments and reduce injection risk.",
+          "Sanitize and validate all user inputs before using them in OS commands."
+        ],
+        "examples": [
+          {
+            "code": "const { execFile } = require('child_process');\nconst userCommand = sanitizeUserInput(req.query.command);\nexecFile('/usr/bin/safe-command', [userCommand], (error, stdout, stderr) => { /* handle output */ });",
+            "description": "Uses `execFile` to run a command with sanitized input."
+          },
+          {
+            "code": "const { spawn } = require('child_process');\nconst userArgs = sanitizeUserInput(req.body.args);\nconst process = spawn('safe-command', [userArgs]);\nprocess.stdout.on('data', (data) => { /* handle output */ });",
+            "description": "Uses `spawn` with sanitized arguments to avoid command injection."
+          }
+        ]
+      },
+      "rationale": "OS command injection vulnerabilities can lead to severe security issues, including unauthorized command execution, system compromise, and data loss. Properly sanitizing user inputs and using secure functions to execute OS commands are crucial for preventing these attacks."
+    },
+    {
+      "id": "JS012",
+      "title": "AWS IAM Policies Should Limit the Scope of Permissions Given",
+      "description": "Detects instances where AWS IAM policies grant overly broad permissions, which can lead to privilege escalation and potential security risks.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["AWS", "IAM", "permissions", "security", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-284: Improper Access Control",
+      "examples": {
+        "positive": [
+          {
+            "code": "const policy = {\n  Version: '2012-10-17',\n  Statement: [\n    {\n      Effect: 'Allow',\n      Action: [\n        's3:GetObject',\n        's3:ListBucket'\n      ],\n      Resource: [\n        'arn:aws:s3:::example-bucket',\n        'arn:aws:s3:::example-bucket/*'\n      ]\n    }\n  ]\n};",
+            "description": "This policy grants specific permissions to access an S3 bucket, adhering to the principle of least privilege."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const policy = {\n  Version: '2012-10-17',\n  Statement: [\n    {\n      Effect: 'Allow',\n      Action: '*',\n      Resource: '*'\n    }\n  ]\n};",
+            "description": "This policy grants overly broad permissions to all actions and resources, which is a security risk.",
+            "pattern": "'Action': '*', 'Resource': '*'"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Review the IAM policies and identify permissions that are overly broad.",
+          "Replace wildcard permissions with specific actions and resources that are necessary for the workload.",
+          "Adhere to the principle of least privilege by granting only the permissions needed to perform specific tasks."
+        ],
+        "examples": [
+          {
+            "code": "const policy = {\n  Version: '2012-10-17',\n  Statement: [\n    {\n      Effect: 'Allow',\n      Action: [\n        's3:GetObject',\n        's3:ListBucket'\n      ],\n      Resource: [\n        'arn:aws:s3:::example-bucket',\n        'arn:aws:s3:::example-bucket/*'\n      ]\n    }\n  ]\n};",
+            "description": "This compliant solution grants specific permissions to access an S3 bucket, reducing the risk of privilege escalation."
+          }
+        ]
+      },
+      "rationale": "AWS IAM policies that contain overly broad permissions can lead to privilege escalation by granting users more access than necessary. They may be able to perform actions beyond their intended scope, leading to potential security risks."
+    },
+    {
+      "id": "JS013",
+      "title": "A New Session Should Be Created During User Authentication",
+      "description": "Detects instances where a new session is not created during user authentication, which can lead to session fixation attacks and security vulnerabilities.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["consistency", "conventional", "security", "vulnerability"],
+      "severity": "Blocker",
+      "cwe": "CWE-384: Session Fixation",
+      "examples": {
+        "positive": [
+          {
+            "code": "function authenticateUser(username, password) {\n  // Invalidate old session\n  req.session.regenerate(function(err) {\n    if (err) throw err;\n    // Set new session values\n    req.session.user = username;\n    // Proceed with authentication\n  });\n}",
+            "description": "This code regenerates the session upon user authentication, preventing session fixation."
+          }
+        ],
+        "negative": [
+          {
+            "code": "function authenticateUser(username, password) {\n  // Proceed with authentication without regenerating session\n  req.session.user = username;\n}",
+            "description": "This code does not regenerate the session upon user authentication, making it vulnerable to session fixation attacks.",
+            "pattern": "req.session.user = username;"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that the session is regenerated or a new session is created during user authentication.",
+          "Invalidate the old session identifier and assign a new one to prevent session fixation.",
+          "Review the authentication code to ensure that it follows best practices for session management."
+        ],
+        "examples": [
+          {
+            "code": "function authenticateUser(username, password) {\n  // Invalidate old session\n  req.session.regenerate(function(err) {\n    if (err) throw err;\n    // Set new session values\n    req.session.user = username;\n    // Proceed with authentication\n  });\n}",
+            "description": "This compliant solution regenerates the session during user authentication, mitigating the risk of session fixation attacks."
+          }
+        ]
+      },
+      "rationale": "Session fixation attacks exploit the way web applications handle session identifiers. By ensuring a new session is created during user authentication, the risk of session fixation is mitigated, improving the overall security of the application."
+    },
+    {
+      "id": "JS014",
+      "title": "JWT Should Be Signed and Verified with Strong Cipher Algorithms",
+      "description": "Detects instances where JSON Web Tokens (JWTs) are not signed with strong cipher algorithms or their signatures are not verified, which can lead to security vulnerabilities and user impersonation.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["trustworthy", "security", "vulnerability", "critical", "cwe", "privacy"],
+      "severity": "Blocker",
+      "cwe": "CWE-347: Improper Verification of Cryptographic Signature",
+      "examples": {
+        "positive": [
+          {
+            "code": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 123 }, 'your-strong-secret-key', { algorithm: 'HS256' });\nconst verifiedToken = jwt.verify(token, 'your-strong-secret-key', { algorithms: ['HS256'] });",
+            "description": "This code securely signs and verifies a JWT using a strong cipher algorithm."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 123 }, 'weak-key');\nconst verifiedToken = jwt.verify(token, 'weak-key');",
+            "description": "This code signs and verifies a JWT using a weak cipher algorithm, making it vulnerable to forgery and impersonation.",
+            "pattern": "jwt.sign(.*?, 'weak-key')|jwt.verify(.*?, 'weak-key')"
+          },
+          {
+            "code": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 123 }, 'your-strong-secret-key');\n// Token is not verified",
+            "description": "This code does not verify the JWT signature, making it vulnerable to forgery and impersonation.",
+            "pattern": "jwt.sign(.*?);(?!.*jwt.verify)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that JWTs are signed using a strong cipher algorithm such as HS256 or RS256.",
+          "Verify the JWT signature using the same strong cipher algorithm before using the token.",
+          "Review the code to ensure that all JWTs are properly signed and verified."
+        ],
+        "examples": [
+          {
+            "code": "const jwt = require('jsonwebtoken');\nconst token = jwt.sign({ userId: 123 }, 'your-strong-secret-key', { algorithm: 'HS256' });\nconst verifiedToken = jwt.verify(token, 'your-strong-secret-key', { algorithms: ['HS256'] });",
+            "description": "This compliant solution securely signs and verifies a JWT using a strong cipher algorithm, mitigating the risk of forgery and impersonation."
+          }
+        ]
+      },
+      "rationale": "JWTs that are not properly signed and verified with strong cipher algorithms can be forged, leading to user impersonation and unauthorized data access. Ensuring that JWTs are securely signed and verified maintains the integrity and security of user identities and authorization claims."
+    },
+    {
+      "id": "JS015",
+      "title": "Cipher Algorithms Should Be Robust",
+      "description": "Detects instances where encryption algorithms are not robust, making it possible for the cleartext of the encrypted message to be recoverable without prior knowledge of the key.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["trustworthy", "security", "vulnerability", "critical", "cwe", "privacy"],
+      "severity": "Blocker",
+      "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+      "examples": {
+        "positive": [
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'aes-256-cbc';\nconst key = crypto.randomBytes(32);\nconst iv = crypto.randomBytes(16);\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This code securely encrypts data using a strong cipher algorithm."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'aes-128-ecb';\nconst key = 'weak-key';\nconst cipher = crypto.createCipher(algorithm, key);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This code uses a weak cipher algorithm and key, making it vulnerable to cryptographic attacks.",
+            "pattern": "crypto.createCipher\\(.*'aes-128-ecb'.*\\)|crypto.createCipher\\(.*, 'weak-key'.*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that robust encryption algorithms such as AES-256-CBC are used.",
+          "Avoid using weak keys and ensure keys are generated using secure methods.",
+          "Review the code to ensure that all encryption uses strong and secure algorithms."
+        ],
+        "examples": [
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'aes-256-cbc';\nconst key = crypto.randomBytes(32);\nconst iv = crypto.randomBytes(16);\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This compliant solution securely encrypts data using a strong cipher algorithm, mitigating the risk of data recovery by unauthorized parties."
+          }
+        ]
+      },
+      "rationale": "Using robust encryption algorithms is essential for protecting sensitive information and ensuring secure communication. Weak algorithms or keys increase the risk of unauthorized recovery of the cleartext, potentially leading to theft of sensitive data and other security breaches."
+    },
+    {
+      "id": "JS016",
+      "title": "Encryption Algorithms Should Be Used with Secure Mode and Padding Scheme",
+      "description": "Detects instances where encryption algorithms are used with insecure modes or padding schemes, making it possible for the cleartext of the encrypted message to be recoverable without prior knowledge of the key.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["trustworthy", "security", "vulnerability", "critical", "cwe", "privacy"],
+      "severity": "Blocker",
+      "cwe": "CWE-329: Not Using a Random IV with CBC Mode",
+      "examples": {
+        "positive": [
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'aes-256-cbc';\nconst key = crypto.randomBytes(32);\nconst iv = crypto.randomBytes(16);\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This code securely encrypts data using a strong cipher algorithm with a secure mode and padding scheme."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'aes-128-ecb';\nconst key = 'weak-key';\nconst cipher = crypto.createCipher(algorithm, key);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This code uses a weak cipher algorithm and key, and an insecure mode (ECB), making it vulnerable to cryptographic attacks.",
+            "pattern": "crypto.createCipher\\(.*'aes-128-ecb'.*\\)|crypto.createCipher\\(.*, 'weak-key'.*\\)"
+          },
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'rsa';\nconst key = 'some-key';\nconst cipher = crypto.publicEncrypt({ key: key, padding: crypto.constants.RSA_PKCS1_PADDING }, Buffer.from('some clear text data'));\nlet encrypted = cipher.toString('hex');",
+            "description": "This code uses RSA encryption with the insecure PKCS1v1.5 padding scheme, making it vulnerable to cryptographic attacks.",
+            "pattern": "crypto.publicEncrypt\\(\\{.*padding: crypto.constants.RSA_PKCS1_PADDING.*\\}\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that robust encryption algorithms such as AES-256-CBC with a secure mode (e.g., CBC) and padding scheme (e.g., PKCS7) are used.",
+          "Avoid using weak keys and ensure keys are generated using secure methods.",
+          "Review the code to ensure that all encryption uses strong and secure algorithms and padding schemes."
+        ],
+        "examples": [
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'aes-256-cbc';\nconst key = crypto.randomBytes(32);\nconst iv = crypto.randomBytes(16);\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This compliant solution securely encrypts data using a strong cipher algorithm, a secure mode, and padding scheme, mitigating the risk of data recovery by unauthorized parties."
+          },
+          {
+            "code": "const crypto = require('crypto');\nconst algorithm = 'rsa';\nconst key = 'some-key';\nconst cipher = crypto.publicEncrypt({ key: key, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, Buffer.from('some clear text data'));\nlet encrypted = cipher.toString('hex');",
+            "description": "This compliant solution securely encrypts data using RSA with a secure padding scheme, mitigating the risk of data recovery by unauthorized parties."
+          }
+        ]
+      },
+      "rationale": "Using encryption algorithms with secure modes and padding schemes is essential for protecting sensitive information and ensuring secure communication. Weak algorithms, modes, or padding schemes increase the risk of unauthorized recovery of the cleartext, potentially leading to theft of sensitive data and other security breaches."
+    },
+    {
+      "id": "JS017",
+      "title": "Server Hostnames Should Be Verified During SSL/TLS Connections",
+      "description": "Detects instances where SSL/TLS connections do not verify server hostnames, making it possible for attackers to impersonate a trusted host.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["complete", "security", "vulnerability", "critical", "cwe", "privacy", "ssl"],
+      "severity": "Blocker",
+      "cwe": "CWE-295: Improper Certificate Validation",
+      "examples": {
+        "positive": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  rejectUnauthorized: true,\n  checkServerIdentity: (host, cert) => {\n    const err = https.checkServerIdentity(host, cert);\n    if (err) {\n      throw err;\n    }\n  }\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This code securely verifies the server hostname during an SSL/TLS connection."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  rejectUnauthorized: false\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This code does not verify the server hostname during an SSL/TLS connection, making it vulnerable to man-in-the-middle attacks.",
+            "pattern": "https.request\\(.*rejectUnauthorized:\\s*false.*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that SSL/TLS connections verify server hostnames.",
+          "Set 'rejectUnauthorized' to true and implement 'checkServerIdentity' to verify the hostname against the certificate.",
+          "Review the code to ensure that all SSL/TLS connections are secure and properly verify server hostnames."
+        ],
+        "examples": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  rejectUnauthorized: true,\n  checkServerIdentity: (host, cert) => {\n    const err = https.checkServerIdentity(host, cert);\n    if (err) {\n      throw err;\n    }\n  }\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This compliant solution ensures that the server hostname is verified during an SSL/TLS connection, mitigating the risk of man-in-the-middle attacks."
+          }
+        ]
+      },
+      "rationale": "Verifying server hostnames during SSL/TLS connections is essential for establishing trust and ensuring secure communication. Disabling hostname verification removes a critical security check, making the system vulnerable to man-in-the-middle attacks and impersonation by malicious actors."
+    },
+    {
+      "id": "JS018",
+      "title": "Server Certificates Should Be Verified During SSL/TLS Connections",
+      "description": "Detects instances where SSL/TLS connections do not verify server certificates, making it possible for attackers to intercept encrypted communications.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["trustworthy", "security", "vulnerability", "critical", "cwe", "privacy", "ssl"],
+      "severity": "Blocker",
+      "cwe": "CWE-295: Improper Certificate Validation",
+      "examples": {
+        "positive": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  rejectUnauthorized: true,\n  checkServerIdentity: (host, cert) => {\n    const err = https.checkServerIdentity(host, cert);\n    if (err) {\n      throw err;\n    }\n  }\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This code securely verifies the server certificate during an SSL/TLS connection."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  rejectUnauthorized: false\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This code does not verify the server certificate during an SSL/TLS connection, making it vulnerable to man-in-the-middle attacks.",
+            "pattern": "https.request\\(.*rejectUnauthorized:\\s*false.*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that SSL/TLS connections verify server certificates.",
+          "Set 'rejectUnauthorized' to true and implement 'checkServerIdentity' to verify the server's certificate.",
+          "Review the code to ensure that all SSL/TLS connections are secure and properly verify server certificates."
+        ],
+        "examples": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  rejectUnauthorized: true,\n  checkServerIdentity: (host, cert) => {\n    const err = https.checkServerIdentity(host, cert);\n    if (err) {\n      throw err;\n    }\n  }\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This compliant solution ensures that the server certificate is verified during an SSL/TLS connection, mitigating the risk of man-in-the-middle attacks."
+          }
+        ]
+      },
+      "rationale": "Verifying server certificates during SSL/TLS connections is essential for establishing trust and ensuring secure communication. Disabling certificate verification removes a critical security check, making the system vulnerable to man-in-the-middle attacks and impersonation by malicious actors."
+    },
+    {
+      "id": "JS019",
+      "title": "Cryptographic Keys Should Be Robust",
+      "description": "Detects instances where cryptographic keys are not robust, exposing encrypted data to attacks aimed at recovering the plaintext.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["trustworthy", "security", "vulnerability", "critical", "cwe", "privacy"],
+      "severity": "Blocker",
+      "cwe": "CWE-326: Inadequate Encryption Strength",
+      "examples": {
+        "positive": [
+          {
+            "code": "const crypto = require('crypto');\nconst key = crypto.randomBytes(32); // 256-bit key for AES-256\nconst iv = crypto.randomBytes(16);\nconst algorithm = 'aes-256-cbc';\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This code uses a robust 256-bit key for AES-256 encryption, ensuring strong security."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const crypto = require('crypto');\nconst key = 'weak-key'; // Weak key for encryption\nconst algorithm = 'aes-128-cbc';\nconst iv = crypto.randomBytes(16);\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This code uses a weak key for AES-128 encryption, making it vulnerable to cryptographic attacks.",
+            "pattern": "crypto.createCipheriv\\(.*'aes-128-cbc'.*\\)|crypto.createCipheriv\\(.*, 'weak-key'.*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that cryptographic keys are robust and meet recommended length requirements.",
+          "Use secure methods to generate cryptographic keys, such as `crypto.randomBytes` for generating strong keys.",
+          "Review the code to ensure that all cryptographic operations use strong and secure keys."
+        ],
+        "examples": [
+          {
+            "code": "const crypto = require('crypto');\nconst key = crypto.randomBytes(32); // 256-bit key for AES-256\nconst iv = crypto.randomBytes(16);\nconst algorithm = 'aes-256-cbc';\nconst cipher = crypto.createCipheriv(algorithm, key, iv);\nlet encrypted = cipher.update('some clear text data', 'utf8', 'hex');\nencrypted += cipher.final('hex');",
+            "description": "This compliant solution uses a robust 256-bit key for AES-256 encryption, ensuring strong security."
+          }
+        ]
+      },
+      "rationale": "Using robust cryptographic keys is essential for protecting sensitive information and ensuring secure communications. Weak keys can expose encrypted data to attacks aimed at recovering the plaintext, potentially leading to significant data breaches and other security risks."
+    },
+    {
+      "id": "JS020",
+      "title": "Weak SSL/TLS Protocols Should Not Be Used",
+      "description": "Detects instances where weak SSL/TLS protocols are used, exposing encrypted data to a number of attacks aimed at recovering the plaintext.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["trustworthy", "security", "vulnerability", "critical", "cwe", "privacy", "ssl", "tls"],
+      "severity": "Blocker",
+      "cwe": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+      "examples": {
+        "positive": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  secureProtocol: 'TLSv1_2_method'\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This code uses a strong TLS 1.2 protocol, ensuring secure communication."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  secureProtocol: 'SSLv3_method'\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This code uses a weak SSL 3.0 protocol, making it vulnerable to cryptographic attacks.",
+            "pattern": "https.request\\(.*secureProtocol:\\s*['\"]SSLv3_method['\"]\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that only strong SSL/TLS protocols are used in your code.",
+          "Replace deprecated protocols (e.g., SSLv3, TLS 1.0, TLS 1.1) with secure ones (e.g., TLS 1.2, TLS 1.3).",
+          "Review the code to ensure that all SSL/TLS connections use strong and secure protocols."
+        ],
+        "examples": [
+          {
+            "code": "const https = require('https');\nconst options = {\n  hostname: 'example.com',\n  port: 443,\n  path: '/',\n  method: 'GET',\n  secureProtocol: 'TLSv1_2_method'\n};\nconst req = https.request(options, (res) => {\n  res.on('data', (d) => {\n    process.stdout.write(d);\n  });\n});\nreq.on('error', (e) => {\n  console.error(e);\n});\nreq.end();",
+            "description": "This compliant solution uses a strong TLS 1.2 protocol, ensuring secure communication."
+          }
+        ]
+      },
+      "rationale": "Using strong SSL/TLS protocols is essential for protecting sensitive information and ensuring secure communications. Weak protocols can expose encrypted data to attacks aimed at recovering the plaintext, potentially leading to significant data breaches and other security risks."
+    },
+    {
+      "id": "JS021",
+      "title": "Origins Should Be Verified During Cross-Origin Communications",
+      "description": "Detects instances where origins are not verified during cross-origin communications, exposing the application to potential data breaches and unauthorized actions.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["intentionality", "complete", "security", "vulnerability", "critical", "cwe", "html5"],
+      "severity": "Blocker",
+      "cwe": "CWE-345: Insufficient Verification of Data Authenticity",
+      "examples": {
+        "positive": [
+          {
+            "code": "window.addEventListener('message', (event) => {\n  if (event.origin === 'https://trusted-origin.com') {\n    // handle message\n  } else {\n    console.warn('Untrusted origin:', event.origin);\n  }\n}, false);",
+            "description": "This code verifies the origin of the message before handling it, ensuring secure cross-origin communication."
+          }
+        ],
+        "negative": [
+          {
+            "code": "window.addEventListener('message', (event) => {\n  // handle message without verifying origin\n  const data = event.data;\n  console.log(data);\n}, false);",
+            "description": "This code does not verify the origin of the message before handling it, making it vulnerable to malicious cross-origin communications.",
+            "pattern": "window.addEventListener\\('message',\\s*function\\(event\\)\\s*\\{[^}]*\\},\\s*false\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Ensure that all cross-origin communications verify the origin before handling data.",
+          "Implement origin checks using `event.origin` for message events and similar checks for other types of cross-origin communications.",
+          "Review the code to ensure that no cross-origin communication handles data without proper origin verification."
+        ],
+        "examples": [
+          {
+            "code": "window.addEventListener('message', (event) => {\n  if (event.origin === 'https://trusted-origin.com') {\n    // handle message\n  } else {\n    console.warn('Untrusted origin:', event.origin);\n  }\n}, false);",
+            "description": "This compliant solution verifies the origin of the message before handling it, ensuring secure cross-origin communication."
+          }
+        ]
+      },
+      "rationale": "Verifying the origins during cross-origin communications is essential to distinguish between legitimate requests and malicious ones. Failure to do so can lead to data breaches, unauthorized actions, and other security risks."
+    },
+    {
+      "id": "JS022",
+      "title": "Regular Expressions Should Not Be Vulnerable to Denial of Service Attacks",
+      "description": "Detects instances where regular expressions may be vulnerable to Denial of Service (DoS) attacks due to catastrophic backtracking.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["intentionality", "efficient", "security", "vulnerability", "critical", "injection", "cwe", "denial-of-service"],
+      "severity": "Blocker",
+      "cwe": "CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const safeRegex = /^(?:\\d{1,3}\\.){3}\\d{1,3}$/;\nconst testString = '192.168.1.1';\nsafeRegex.test(testString);",
+            "description": "This code uses a simple and safe regular expression that avoids catastrophic backtracking."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const unsafeRegex = /^(a+)+$/;\nconst testString = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';\nunsafeRegex.test(testString);",
+            "description": "This code uses a vulnerable regular expression that can cause catastrophic backtracking, leading to a DoS attack.",
+            "pattern": "/\\(.*\\+.*\\)+/"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using regular expressions that contain nested quantifiers or patterns that can lead to catastrophic backtracking.",
+          "Use safe regular expression patterns that are designed to handle large inputs efficiently.",
+          "Review and test regular expressions to ensure they do not exhibit exponential complexity."
+        ],
+        "examples": [
+          {
+            "code": "const safeRegex = /^(?:\\d{1,3}\\.){3}\\d{1,3}$/;\nconst testString = '192.168.1.1';\nsafeRegex.test(testString);",
+            "description": "This compliant solution uses a simple and safe regular expression that avoids catastrophic backtracking."
+          }
+        ]
+      },
+      "rationale": "Using regular expressions that are vulnerable to Denial of Service (DoS) attacks can cause significant performance issues and potentially make the application unavailable. Avoiding patterns that lead to catastrophic backtracking is essential to maintain the efficiency and security of the application."
+    },
+    {
+      "id": "JS023",
+      "title": "File Uploads Should Be Restricted",
+      "description": "Detects instances where file uploads are not properly restricted, which can lead to security vulnerabilities such as malicious file uploads.",
+      "impact": "Critical",
+      "category": "Security",
+      "tags": ["intentionality", "complete", "security", "vulnerability", "critical", "cwe", "express.js"],
+      "severity": "Blocker",
+      "cwe": "CWE-434: Unrestricted Upload of File with Dangerous Type",
+      "examples": {
+        "positive": [
+          {
+            "code": "const express = require('express');\nconst multer = require('multer');\nconst app = express();\nconst upload = multer({\n  dest: 'uploads/',\n  limits: { fileSize: 1 * 1024 * 1024 }, // 1 MB limit\n  fileFilter: (req, file, cb) => {\n    if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg') {\n      return cb(new Error('Only .png and .jpg files are allowed!'));\n    }\n    cb(null, true);\n  }\n});\napp.post('/upload', upload.single('file'), (req, res) => {\n  res.send('File uploaded successfully');\n});\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code restricts file uploads to .png and .jpg files and limits the file size to 1 MB, ensuring secure file uploads."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const express = require('express');\nconst multer = require('multer');\nconst app = express();\nconst upload = multer({ dest: 'uploads/' });\napp.post('/upload', upload.single('file'), (req, res) => {\n  res.send('File uploaded successfully');\n});\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code does not restrict file types or sizes, making it vulnerable to malicious file uploads.",
+            "pattern": "multer\\(\\{\\s*dest: 'uploads/'\\s*\\}\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Restrict file uploads to specific types (e.g., images only) by checking the file mimetype.",
+          "Set a limit on the file size to prevent large file uploads that could exhaust server resources.",
+          "Store uploaded files in a directory that is not accessible to the public to prevent direct access to uploaded files."
+        ],
+        "examples": [
+          {
+            "code": "const express = require('express');\nconst multer = require('multer');\nconst app = express();\nconst upload = multer({\n  dest: 'uploads/',\n  limits: { fileSize: 1 * 1024 * 1024 }, // 1 MB limit\n  fileFilter: (req, file, cb) => {\n    if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg') {\n      return cb(new Error('Only .png and .jpg files are allowed!'));\n    }\n    cb(null, true);\n  }\n});\napp.post('/upload', upload.single('file'), (req, res) => {\n  res.send('File uploaded successfully');\n});\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This compliant solution restricts file uploads to .png and .jpg files, limits the file size to 1 MB, and stores files in a secure directory."
+          }
+        ]
+      },
+      "rationale": "Restricting file uploads is essential to prevent security vulnerabilities such as malicious file uploads, which can lead to code execution, server resource exhaustion, and other critical security issues. Implementing proper file upload restrictions ensures the security and integrity of the application."
+    },
+    {
+      "id": "JS024",
+      "title": "Applications Should Not Create Session Cookies from Untrusted Input",
+      "description": "Detects instances where session cookies are created from untrusted input, exposing the application to session hijacking and other security vulnerabilities.",
+      "impact": "Major",
+      "category": "Security",
+      "tags": ["intentionality", "complete", "security", "vulnerability", "major", "injection", "cwe"],
+      "severity": "Critical",
+      "cwe": "CWE-20: Improper Input Validation",
+      "examples": {
+        "positive": [
+          {
+            "code": "const express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\napp.use(cookieParser());\napp.get('/login', (req, res) => {\n  const userId = req.query.userId;\n  // Validate the userId properly before using it\n  if (isValidUserId(userId)) {\n    res.cookie('session', generateSessionToken(userId), { httpOnly: true, secure: true });\n    res.send('Logged in');\n  } else {\n    res.status(400).send('Invalid user ID');\n  }\n});\nfunction isValidUserId(userId) {\n  // Implement proper validation logic for userId\n  return /^[a-zA-Z0-9_-]{3,20}$/.test(userId);\n}\nfunction generateSessionToken(userId) {\n  // Implement session token generation logic\n  return `token-${userId}-${Date.now()}`;\n}\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code properly validates the userId before using it to create a session cookie, ensuring secure session management."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\napp.use(cookieParser());\napp.get('/login', (req, res) => {\n  const userId = req.query.userId;\n  res.cookie('session', `token-${userId}-${Date.now()}`, { httpOnly: true, secure: true });\n  res.send('Logged in');\n});\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code creates a session cookie using untrusted input from req.query.userId, making it vulnerable to session hijacking and other attacks.",
+            "pattern": "res\\.cookie\\(\\s*['\"]session['\"]\\s*,\\s*`token-\\$\\{req\\.query\\.userId\\}-\\$\\{Date\\.now\\(\\)\\}`\\s*\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using untrusted input directly to create session cookies.",
+          "Validate and sanitize any input used for creating session cookies.",
+          "Implement proper input validation logic to ensure the integrity and security of session tokens."
+        ],
+        "examples": [
+          {
+            "code": "const express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\napp.use(cookieParser());\napp.get('/login', (req, res) => {\n  const userId = req.query.userId;\n  // Validate the userId properly before using it\n  if (isValidUserId(userId)) {\n    res.cookie('session', generateSessionToken(userId), { httpOnly: true, secure: true });\n    res.send('Logged in');\n  } else {\n    res.status(400).send('Invalid user ID');\n  }\n});\nfunction isValidUserId(userId) {\n  // Implement proper validation logic for userId\n  return /^[a-zA-Z0-9_-]{3,20}$/.test(userId);\n}\nfunction generateSessionToken(userId) {\n  // Implement session token generation logic\n  return `token-${userId}-${Date.now()}`;\n}\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This compliant solution properly validates the userId before using it to create a session cookie, ensuring secure session management."
+          }
+        ]
+      },
+      "rationale": "Creating session cookies from untrusted input can lead to serious security vulnerabilities, including session hijacking and sensitive data disclosure. Proper validation and sanitization of input used for session management is essential to maintain the security and integrity of the application."
+    },
+    {
+      "id": "JS025",
+      "title": "Server-Side Requests Should Not Be Vulnerable to Forging Attacks",
+      "description": "Detects instances where server-side requests can be forged, potentially allowing attackers to coerce the server into performing arbitrary requests on their behalf.",
+      "impact": "Major",
+      "category": "Security",
+      "tags": ["intentionality", "complete", "security", "vulnerability", "major", "injection", "cwe"],
+      "severity": "Critical",
+      "cwe": "CWE-918: Server-Side Request Forgery (SSRF)",
+      "examples": {
+        "positive": [
+          {
+            "code": "const axios = require('axios');\nconst express = require('express');\nconst app = express();\napp.get('/fetch-data', async (req, res) => {\n  const url = req.query.url;\n  if (isValidUrl(url)) {\n    try {\n      const response = await axios.get(url);\n      res.json(response.data);\n    } catch (error) {\n      res.status(500).send('Error fetching data');\n    }\n  } else {\n    res.status(400).send('Invalid URL');\n  }\n});\nfunction isValidUrl(url) {\n  const urlPattern = /^(https?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([\\/\\w .-]*)*\\/?$/;\n  return urlPattern.test(url);\n}\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code validates the URL before making a server-side request, preventing SSRF vulnerabilities."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const axios = require('axios');\nconst express = require('express');\nconst app = express();\napp.get('/fetch-data', async (req, res) => {\n  const url = req.query.url;\n  try {\n    const response = await axios.get(url);\n    res.json(response.data);\n  } catch (error) {\n    res.status(500).send('Error fetching data');\n  }\n});\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code makes a server-side request using untrusted input from req.query.url, making it vulnerable to SSRF attacks.",
+            "pattern": "axios\\.get\\(req\\.query\\.url\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Validate and sanitize any input used to construct server-side requests.",
+          "Implement proper URL validation logic to ensure the integrity and security of the requests.",
+          "Consider using allow-lists for URLs to limit the destinations of server-side requests."
+        ],
+        "examples": [
+          {
+            "code": "const axios = require('axios');\nconst express = require('express');\nconst app = express();\napp.get('/fetch-data', async (req, res) => {\n  const url = req.query.url;\n  if (isValidUrl(url)) {\n    try {\n      const response = await axios.get(url);\n      res.json(response.data);\n    } catch (error) {\n      res.status(500).send('Error fetching data');\n    }\n  } else {\n    res.status(400).send('Invalid URL');\n  }\n});\nfunction isValidUrl(url) {\n  const urlPattern = /^(https?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([\\/\\w .-]*)*\\/?$/;\n  return urlPattern.test(url);\n}\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This compliant solution validates the URL before making a server-side request, preventing SSRF vulnerabilities."
+          }
+        ]
+      },
+      "rationale": "Server-side requests forged by attackers can lead to unauthorized actions and data disclosure. Proper validation and sanitization of input used for constructing server-side requests are essential to maintain the security and integrity of the application."
+    },
+    {
+      "id": "JS027",
+      "title": "OS Commands Should Not Be Vulnerable to Argument Injection Attacks",
+      "description": "Detects instances where OS command arguments are constructed from untrusted input, potentially allowing attackers to influence the behavior of executed commands.",
+      "impact": "Minor",
+      "category": "Security",
+      "tags": ["intentionality", "complete", "security", "vulnerability", "minor", "injection", "cwe"],
+      "severity": "High",
+      "cwe": "CWE-88: Argument Injection or Modification",
+      "examples": {
+        "positive": [
+          {
+            "code": "const { exec } = require('child_process');\nconst express = require('express');\nconst app = express();\napp.get('/run', (req, res) => {\n  const userInput = req.query.userInput;\n  if (isValidInput(userInput)) {\n    exec(`ls ${userInput}`, (error, stdout, stderr) => {\n      if (error) {\n        res.status(500).send(`Error: ${stderr}`);\n      } else {\n        res.send(`Output: ${stdout}`);\n      }\n    });\n  } else {\n    res.status(400).send('Invalid input');\n  }\n});\nfunction isValidInput(input) {\n  return /^[a-zA-Z0-9_-]+$/.test(input);\n}\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code validates the user input before using it as an argument in the OS command, preventing argument injection attacks."
+          }
+        ],
+        "negative": [
+          {
+            "code": "const { exec } = require('child_process');\nconst express = require('express');\nconst app = express();\napp.get('/run', (req, res) => {\n  const userInput = req.query.userInput;\n  exec(`ls ${userInput}`, (error, stdout, stderr) => {\n    if (error) {\n      res.status(500).send(`Error: ${stderr}`);\n    } else {\n      res.send(`Output: ${stdout}`);\n    }\n  });\n});\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This code constructs an OS command argument from untrusted input, making it vulnerable to argument injection attacks.",
+            "pattern": "exec\\(`ls \\$\\{req\\.query\\.userInput\\}`\\)"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using untrusted input directly to construct OS command arguments.",
+          "Validate and sanitize any input used in OS command arguments.",
+          "Use parameterized methods or safer alternatives where possible."
+        ],
+        "examples": [
+          {
+            "code": "const { execFile } = require('child_process');\nconst express = require('express');\nconst app = express();\napp.get('/run', (req, res) => {\n  const userInput = req.query.userInput;\n  if (isValidInput(userInput)) {\n    execFile('ls', [userInput], (error, stdout, stderr) => {\n      if (error) {\n        res.status(500).send(`Error: ${stderr}`);\n      } else {\n        res.send(`Output: ${stdout}`);\n      }\n    });\n  } else {\n    res.status(400).send('Invalid input');\n  }\n});\nfunction isValidInput(input) {\n  return /^[a-zA-Z0-9_-]+$/.test(input);\n}\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+            "description": "This compliant solution validates the user input before using it in a parameterized OS command, preventing argument injection attacks."
+          }
+        ]
+      },
+      "rationale": "Constructing OS command arguments from untrusted input without validation can lead to argument injection attacks. Proper validation and sanitization of input are essential to maintain the security and integrity of the application."
+    },
+    {
+      "id": "JS028",
+      "title": "Web SQL Databases Should Not Be Used",
+      "description": "Detects instances where Web SQL databases are used, which are deprecated and pose security risks.",
+      "impact": "Blocker",
+      "category": "Security",
+      "tags": ["consistency", "conventional", "security", "vulnerability", "blocker", "type-dependent"],
+      "severity": "High",
+      "cwe": "CWE-94: Improper Control of Generation of Code ('Code Injection')",
+      "examples": {
+        "positive": [
+          {
+            "code": "const db = indexedDB.open('myDb', 1);\ndb.onupgradeneeded = (event) => {\n  const db = event.target.result;\n  db.createObjectStore('store', { keyPath: 'id' });\n};\ndb.onsuccess = () => {\n  console.log('Database opened successfully');\n};",
+            "description": "This code uses IndexedDB, which is a recommended alternative to Web SQL Database."
+          }
+        ],
+        "negative": [
+          {
+            "code": "var db = window.openDatabase('myDb', '1.0', 'Personal secrets stored here', 2 * 1024 * 1024);",
+            "description": "This code uses Web SQL Database, which is deprecated and should not be used.",
+            "pattern": "window\\.openDatabase\\("
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Replace Web SQL Database with a modern alternative like IndexedDB or Web Storage.",
+          "Ensure data is securely stored and accessed using supported and recommended methods."
+        ],
+        "examples": [
+          {
+            "code": "const db = indexedDB.open('myDb', 1);\ndb.onupgradeneeded = (event) => {\n  const db = event.target.result;\n  db.createObjectStore('store', { keyPath: 'id' });\n};\ndb.onsuccess = () => {\n  console.log('Database opened successfully');\n};",
+            "description": "This compliant solution uses IndexedDB instead of Web SQL Database."
+          }
+        ]
+      },
+      "rationale": "The Web SQL Database standard was deprecated by the W3C and is not supported in all browsers, posing compatibility and security risks. Using modern alternatives like IndexedDB ensures better security and broader compatibility."
+    },
+    {
+      "id": "JS029",
+      "title": "Local Storage and Session Storage Should Not Be Used",
+      "description": "Detects instances where localStorage and sessionStorage are used, which can pose security risks by storing data in an unencrypted format accessible by any script on the page.",
+      "impact": "Major",
+      "category": "Security",
+      "tags": ["consistency", "conventional", "security", "vulnerability", "major", "type-dependent"],
+      "severity": "High",
+      "cwe": "CWE-922: Insecure Storage of Sensitive Information",
+      "examples": {
+        "positive": [
+          {
+            "code": "const secureStorage = (key, value) => {\n  const encryptedValue = encrypt(value); // Hypothetical encryption function\n  document.cookie = `${key}=${encryptedValue}`;\n};\nsecureStorage('login', login);",
+            "description": "This code uses a hypothetical secure storage function to store encrypted data in cookies instead of localStorage or sessionStorage."
+          }
+        ],
+        "negative": [
+          {
+            "code": "localStorage.setItem('login', login);",
+            "description": "This code uses localStorage to store sensitive information, which is insecure.",
+            "pattern": "localStorage\\.setItem\\("
+          },
+          {
+            "code": "sessionStorage.setItem('sessionId', sessionId);",
+            "description": "This code uses sessionStorage to store sensitive information, which is insecure.",
+            "pattern": "sessionStorage\\.setItem\\("
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Avoid using localStorage and sessionStorage for storing sensitive information.",
+          "Use secure storage methods such as cookies with appropriate security flags (HttpOnly, Secure) or other encrypted storage mechanisms."
+        ],
+        "examples": [
+          {
+            "code": "const secureStorage = (key, value) => {\n  const encryptedValue = encrypt(value); // Hypothetical encryption function\n  document.cookie = `${key}=${encryptedValue}`;\n};\nsecureStorage('login', login);",
+            "description": "This compliant solution uses a secure storage function to store encrypted data in cookies instead of localStorage or sessionStorage."
+          }
+        ]
+      },
+      "rationale": "Using localStorage and sessionStorage for sensitive data is insecure because the data is stored in an unencrypted format that can be accessed by any script on the page. Using secure storage methods helps protect sensitive information from unauthorized access."
+    },
+    {
+      "id": "JS030",
+      "title": "Debugger Statements Should Not Be Used",
+      "description": "Detects instances where debugger statements are used in the code, which can lead to unexpected behavior and potential vulnerabilities in production environments.",
+      "impact": "Minor",
+      "category": "Code Quality",
+      "tags": ["consistency", "conventional", "security", "vulnerability", "minor", "type-dependent"],
+      "severity": "Low",
+      "cwe": "CWE-489: Leftover Debug Code",
+      "examples": {
+        "positive": [
+          {
+            "code": "for (let i = 1; i < 5; i++) {\n  // Print i to the Output window.\n  console.log('loop index is ' + i);\n}",
+            "description": "This compliant code does not use debugger statements and instead logs information to the console."
+          }
+        ],
+        "negative": [
+          {
+            "code": "for (let i = 1; i < 5; i++) {\n  // Print i to the Output window.\n  console.log('loop index is ' + i);\n  debugger;\n}",
+            "description": "This code uses a debugger statement, which should be removed.",
+            "pattern": "debugger;"
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Remove debugger statements from the source code.",
+          "Use console.log or other logging methods to debug information during development."
+        ],
+        "examples": [
+          {
+            "code": "for (let i = 1; i < 5; i++) {\n  // Print i to the Output window.\n  console.log('loop index is ' + i);\n}",
+            "description": "This compliant solution removes the debugger statement and uses console.log for debugging information."
+          }
+        ]
+      },
+      "rationale": "Debugger statements should be removed from production code to prevent unexpected behavior and potential vulnerabilities. Using appropriate logging methods ensures that debugging information can be accessed without impacting the production environment."
+    },
+    {
+      "id": "JS031",
+      "title": "Alert, Confirm, and Prompt Should Not Be Used",
+      "description": "Detects instances where alert, confirm, and prompt functions are used, which can expose sensitive information to attackers and should not be used in production code.",
+      "impact": "Minor",
+      "category": "Code Quality",
+      "tags": ["consistency", "conventional", "security", "vulnerability", "minor", "type-dependent"],
+      "severity": "Low",
+      "cwe": "CWE-488: Exposure of Data Elements to Wrong Session",
+      "examples": {
+        "positive": [
+          {
+            "code": "if (unexpectedCondition) {\n  console.log('Unexpected Condition');\n}",
+            "description": "This compliant code logs the unexpected condition to the console instead of using an alert."
+          }
+        ],
+        "negative": [
+          {
+            "code": "if (unexpectedCondition) {\n  alert('Unexpected Condition');\n}",
+            "description": "This code uses an alert to notify about an unexpected condition, which should be avoided.",
+            "pattern": "alert\\("
+          },
+          {
+            "code": "if (userConfirmation) {\n  confirm('Are you sure?');\n}",
+            "description": "This code uses confirm to get user confirmation, which should be avoided.",
+            "pattern": "confirm\\("
+          },
+          {
+            "code": "if (userInputRequired) {\n  prompt('Please enter your name:');\n}",
+            "description": "This code uses prompt to get user input, which should be avoided.",
+            "pattern": "prompt\\("
+          }
+        ]
+      },
+      "fix": {
+        "steps": [
+          "Remove alert, confirm, and prompt statements from the source code.",
+          "Use console.log or other appropriate logging methods to debug information during development.",
+          "Implement custom modal dialogs for user interactions in production environments."
+        ],
+        "examples": [
+          {
+            "code": "if (unexpectedCondition) {\n  console.log('Unexpected Condition');\n}",
+            "description": "This compliant solution uses console.log to log unexpected conditions instead of using alert."
+          }
+        ]
+      },
+      "rationale": "Alert, confirm, and prompt functions can expose sensitive information and disrupt user experience. Using console.log for debugging and custom modal dialogs for user interactions ensures better security and user experience."
+    } 
+  ]
+}
+
       {
         "id": "JS002",
         "description": "Detect potential XSS in innerHTML assignments",
