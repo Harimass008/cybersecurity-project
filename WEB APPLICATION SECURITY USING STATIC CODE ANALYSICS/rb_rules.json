@@ -1,0 +1,740 @@
+{
+    "rules": [
+      {
+        "id": "R001",
+        "title": "All Branches in Conditional Structures Should Not Have Exactly the Same Implementation",
+        "description": "Detects instances where all branches of a conditional structure (such as if/else or case statements) have the same implementation, which may indicate a copy-paste error or unnecessary code.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["conditional structure", "code smell", "reliability", "bug"],
+        "severity": "Major",
+        "cwe": "CWE-482: Missing Default Case in Switch Statement",
+        "examples": {
+          "positive": [
+            {
+              "code": "if b == 0\n  doOneMoreThing()\nelsif b == 1\n  doSomethingElse()\nend",
+              "description": "Compliant code where the branches have different implementations, ensuring distinct functionality."
+            }
+          ],
+          "negative": [
+            {
+              "code": "if b == 0\n  doOneMoreThing()\nelse\n  doOneMoreThing()\nend",
+              "description": "Noncompliant code where all branches have the same implementation, indicating a possible error.",
+              "pattern": "if\\s.*\\n.*\\nelse\\n.*\\nend|case\\s.*\\n(\\s*when.*\\n.*)+\\n\\s*else\\n.*\\nend"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Review the conditional branches to determine if they are intentionally the same or if there is an error.",
+            "If the branches are intentionally the same, consider removing the unnecessary conditional structure.",
+            "If the branches are not meant to be the same, update the implementation to reflect the correct logic."
+          ],
+          "examples": [
+            {
+              "code": "if b == 0\n  doOneMoreThing()\nelsif b == 1\n  doSomethingElse()\nend",
+              "description": "Refactored code where the branches have distinct implementations, improving reliability and code clarity."
+            }
+          ]
+        },
+        "rationale": "Having identical implementations in all branches of a conditional structure often indicates a copy-paste error or unnecessary code. This can lead to confusion, reduce code clarity, and increase the risk of bugs. Ensuring that each branch has a distinct implementation or removing redundant branches improves code reliability."
+    },
+  {
+        "id": "R002",
+        "title": "Non-existent Operators Like '=+' Should Not Be Used",
+        "description": "Detects instances where non-existent operators (such as =+, =-, or =!) are used, which can cause confusion and lead to unintended behavior.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["operators", "syntax", "reliability", "bug"],
+        "severity": "Major",
+        "cwe": "CWE-480: Use of Incorrect Operator",
+        "examples": {
+          "positive": [
+            {
+              "code": "target = -5\nnum = 3\ntarget -= num # target = -8",
+              "description": "Compliant code where the correct operator -= is used, leading to the expected result."
+            },
+            {
+              "code": "target = -5\nnum = 3\ntarget = -num # target = -3",
+              "description": "Compliant code where the correct spacing is used, avoiding confusion with non-existent operators."
+            }
+          ],
+          "negative": [
+            {
+              "code": "target = -5\nnum = 3\ntarget =- num # Noncompliant: target = -3. Is that the intended behavior?",
+              "description": "Noncompliant code where =- is used, leading to unexpected behavior.",
+              "pattern": "target\\s*=\\s*[+-!]"
+            },
+            {
+              "code": "target = -5\nnum = 3\ntarget =+ num # Noncompliant: target = 3",
+              "description": "Noncompliant code where =+ is used, leading to unexpected behavior.",
+              "pattern": "target\\s*=\\s*\\+"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Review the operator usage to ensure it matches the intended behavior.",
+            "Replace non-existent operators with the correct operator if the intention is to perform an arithmetic or logical operation (e.g., =- should be -=).",
+            "Adjust spacing if the intention is to assign a value using the = operator followed by an arithmetic sign (e.g., target = -num)."
+          ],
+          "examples": [
+            {
+              "code": "target = -5\nnum = 3\ntarget -= num # target = -8",
+              "description": "Refactored code where the correct operator -= is used, ensuring the correct result."
+            },
+            {
+              "code": "target = -5\nnum = 3\ntarget = -num # target = -3",
+              "description": "Refactored code with correct spacing, avoiding confusion with non-existent operators."
+            }
+          ]
+        },
+        "rationale": "Using non-existent operators like =+, =-, or =! is confusing and may lead to unintended behavior. This rule ensures that operators are used correctly, improving code reliability and preventing potential bugs."
+    },
+  {
+  
+        "id": "R003",
+        "title": "Related 'if/elsif' Statements and 'when' in a 'case' Should Not Have the Same Condition",
+        "description": "Detects instances where 'if/elsif' statements or 'when' clauses in a 'case' statement have duplicate conditions, leading to dead code or unintended behavior.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["conditional statements", "case statement", "if/elsif", "code smell", "dead code"],
+        "severity": "Major",
+        "cwe": "CWE-489: Dead Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "if param == 1\n  openWindow()\nelsif param == 2\n  closeWindow()\nelsif param == 3\n  moveWindowToTheBackground()\nend",
+              "description": "Compliant code where each 'if/elsif' branch has a unique condition, avoiding dead code."
+            },
+            {
+              "code": "case i\n  when 1\n    # ...\n  when 3\n    # ...\n  else\n    # ...\nend",
+              "description": "Compliant code where each 'when' clause in the 'case' statement has a unique condition, preventing dead code."
+            }
+          ],
+          "negative": [
+            {
+              "code": "if param == 1\n  openWindow()\nelsif param == 2\n  closeWindow()\nelsif param == 1  # Noncompliant\n  moveWindowToTheBackground()\nend",
+              "description": "Noncompliant code where 'elsif param == 1' is duplicated, leading to dead code.",
+              "pattern": "elsif\\s+param\\s*==\\s*\\d+\\s*# Noncompliant"
+            },
+            {
+              "code": "case i\n  when 1\n    # ...\n  when 3\n    # ...\n  when 1  # Noncompliant\n    # ...\n  else\n    # ...\nend",
+              "description": "Noncompliant code where 'when 1' is duplicated, causing unreachable code.",
+              "pattern": "when\\s+\\d+\\s*# Noncompliant"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Review the conditions in 'if/elsif' statements and 'when' clauses in 'case' statements to ensure they are unique.",
+            "Remove or consolidate any duplicate conditions to avoid dead code and ensure correct execution flow.",
+            "Test the code to ensure that the removal or modification of conditions does not introduce new bugs."
+          ],
+          "examples": [
+            {
+              "code": "if param == 1\n  openWindow()\nelsif param == 2\n  closeWindow()\nelsif param == 3\n  moveWindowToTheBackground()\nend",
+              "description": "Refactored code where duplicate conditions have been removed, ensuring each branch has a unique condition."
+            },
+            {
+              "code": "case i\n  when 1\n    # ...\n  when 3\n    # ...\n  else\n    # ...\nend",
+              "description": "Refactored code where duplicate 'when' conditions have been removed, preventing dead code."
+            }
+          ]
+        },
+        "rationale": "Having duplicate conditions in 'if/elsif' statements or 'when' clauses leads to dead code or unintended behavior. Removing or consolidating duplicate conditions ensures that the code behaves as expected and avoids maintenance issues or bugs."
+      
+  },
+  {
+        "id": "R004",
+        "title": "Identical Expressions Should Not Be Used on Both Sides of a Binary Operator",
+        "description": "Detects instances where identical expressions are used on both sides of a binary operator, which often indicates a bug or unnecessary duplication.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["binary operators", "code smell", "reliability", "bug"],
+        "severity": "Major",
+        "cwe": "CWE-570: Expression is Always True",
+        "examples": {
+          "positive": [
+            {
+              "code": "result = a + b # Using different expressions on both sides",
+              "description": "Compliant code where different expressions are used on each side of the operator."
+            },
+            {
+              "code": "if x != y # Comparison with different variables\n  doSomething()\nend",
+              "description": "Compliant code where the comparison is between different variables."
+            }
+          ],
+          "negative": [
+            {
+              "code": "result = a * a # Noncompliant: a * a is redundant, should be simplified to a * a",
+              "description": "Noncompliant code where the same expression is used on both sides of the operator, leading to redundant code.",
+              "pattern": "\\b\\w+\\s*\\*\\s*\\w+\\b\\s*==\\s*\\w+\\s*\\*\\s*\\w+\\b"
+            },
+            {
+              "code": "if x == x # Noncompliant: comparison of the same variable, always true\n  doSomething()\nend",
+              "description": "Noncompliant code where a variable is compared to itself, which is always true and redundant.",
+              "pattern": "if\\s+\\w+\\s*==\\s*\\w+"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Review binary operations to ensure that different expressions are used on each side of the operator.",
+            "Simplify the expression if the same value is used on both sides, as this often leads to redundant or incorrect logic.",
+            "For comparisons, ensure that different variables or expressions are used to avoid always-true or always-false conditions."
+          ],
+          "examples": [
+            {
+              "code": "result = a + b # Using different expressions on both sides",
+              "description": "Refactored code where the expression has been simplified to avoid redundancy."
+            },
+            {
+              "code": "if x != y # Comparison with different variables\n  doSomething()\nend",
+              "description": "Refactored code with a valid comparison between different variables, ensuring meaningful conditions."
+            }
+          ]
+        },
+        "rationale": "Using identical expressions on both sides of a binary operator often indicates a mistake or redundancy. Ensuring that different expressions are used can prevent bugs and improve code clarity, leading to more reliable and maintainable code."
+      },
+  {
+        "id": "R005",
+        "title": "All Code Should Be Reachable",
+        "description": "Detects instances where code after jump statements (such as return, break, and next) becomes unreachable. This often indicates a logical error or redundant code.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["code reachability", "control flow", "reliability", "bug"],
+        "severity": "Major",
+        "cwe": "CWE-561: Dead Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "def foo(a)\n  i = 10\n  return a + i\nend",
+              "description": "Compliant code where all statements before the return statement are reachable and functional."
+            }
+          ],
+          "negative": [
+            {
+              "code": "def foo(a)\n  i = 10\n  return a + i    # Noncompliant\n  i += 1          # dead code\nend",
+              "description": "Noncompliant code where the statement after the return is unreachable and hence considered dead code.",
+              "pattern": "return\\s+.*\\n\\s*[^\\n]*\\s*# dead code"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify jump statements such as return, break, or next in your code.",
+            "Review the code following these statements to ensure that it does not contain unreachable or redundant code.",
+            "Remove or refactor any code that is unreachable to improve code clarity and avoid confusion."
+          ],
+          "examples": [
+            {
+              "code": "def foo(a)\n  i = 10\n  return a + i\nend",
+              "description": "Refactored code where all statements are reachable and functionally necessary."
+            }
+          ]
+        },
+        "rationale": "Code following jump statements like return, break, or next is considered dead code and will never be executed. Identifying and removing such unreachable code ensures that the codebase remains clean, efficient, and free from logical errors or redundancy."
+      },
+  {
+        "id": "R006",
+        "title": "Variables Should Not Be Self-Assigned",
+        "description": "Detects instances where a variable is assigned to itself, which is either a redundant statement or a mistake. This should be corrected to avoid unnecessary code or logical errors.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["variable assignment", "redundancy", "code clarity", "bug"],
+        "severity": "Major",
+        "cwe": "CWE-561: Dead Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "def set_name(name)\n  @name = name\nend",
+              "description": "Compliant code where the variable is assigned to an instance variable, which is meaningful and necessary."
+            }
+          ],
+          "negative": [
+            {
+              "code": "def set_name(name)\n  name = name\nend",
+              "description": "Noncompliant code where the variable is assigned to itself, which is redundant and does not achieve any effect.",
+              "pattern": "\\b\\w+\\s*=\\s*\\w+\\b"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify self-assignment statements in your code.",
+            "Determine if the self-assignment is redundant or if there was an intended assignment to a different variable or value.",
+            "Replace or remove the redundant self-assignment to ensure that the code is meaningful and effective."
+          ],
+          "examples": [
+            {
+              "code": "def set_name(name)\n  @name = name\nend",
+              "description": "Refactored code where the variable is assigned to an instance variable, providing meaningful functionality."
+            }
+          ]
+        },
+        "rationale": "Self-assigning a variable is redundant and serves no purpose. This typically indicates either a logical error or unnecessary code that should be cleaned up to ensure clarity and prevent potential bugs."
+      },
+  {
+        "id": "R007",
+        "title": "Useless 'if true ...' and 'if false ...' Blocks Should Be Removed",
+        "description": "Detects instances where 'if true' or 'if false' blocks are used, which render code either always executed or completely non-functional. These blocks should be removed to improve code clarity and prevent unnecessary execution.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["conditional statements", "dead code", "redundancy", "code clarity", "bug"],
+        "severity": "Major",
+        "cwe": "CWE-561: Dead Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "doSomething()\n",
+              "description": "Compliant code where unnecessary 'if true' blocks have been removed, resulting in cleaner and more readable code."
+            }
+          ],
+          "negative": [
+            {
+              "code": "if true\n  doSomething()\nend\n",
+              "description": "Noncompliant code where the 'if true' block is redundant and the code inside will always be executed.",
+              "pattern": "if\\s+true\\s*\\n.*\\nend"
+            },
+            {
+              "code": "if false\n  doSomethingElse()\nend\n",
+              "description": "Noncompliant code where the 'if false' block is redundant and the code inside will never be executed.",
+              "pattern": "if\\s+false\\s*\\n.*\\nend"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify 'if true' and 'if false' blocks in your code.",
+            "Remove these blocks, as they either always execute or never execute the code inside.",
+            "Ensure that the removal does not affect the intended functionality and test the code to confirm that it behaves as expected."
+          ],
+          "examples": [
+            {
+              "code": "doSomething()\n",
+              "description": "Refactored code with the unnecessary 'if true' block removed, resulting in more concise and readable code."
+            }
+          ]
+        },
+        "rationale": "Using 'if true' or 'if false' blocks can lead to redundant or dead code. Removing these blocks improves code clarity and efficiency, ensuring that only necessary code is executed and reducing potential confusion or errors."
+      },
+      {
+        "id": "R008",
+        "title": "All Branches in a Conditional Structure Should Not Have Exactly the Same Implementation",
+        "description": "Detects instances where all branches in a conditional structure (e.g., if-else or case statements) have the same implementation. This indicates a potential issue, such as a copy-paste error or an unnecessary conditional structure that should be removed.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["conditional statements", "code clarity", "maintenance", "refactoring"],
+        "severity": "Major",
+        "cwe": "CWE-17: Code with Duplicate Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "if b == 0\n  doSomething()\nelsif b == 1\n  doSomething()\nend\n",
+              "description": "Compliant code where each branch of the conditional structure has distinct logic, ensuring that the conditions are meaningful and not redundant."
+            }
+          ],
+          "negative": [
+            {
+              "code": "if b == 0\n  doOneMoreThing()\nelse\n  doOneMoreThing()\nend\n",
+              "description": "Noncompliant code where both branches of the `if-else` structure have the same implementation, suggesting a potential copy-paste error or redundant conditional check.",
+              "pattern": "if\\s+.*\\n\\s*else\\s*\\n\\s*doOneMoreThing\\(\\)"
+            },
+            {
+              "code": "case i\nwhen 1\n  doSomething()\nwhen 2\n  doSomething()\nwhen 3\n  doSomething()\nelse\n  doSomething()\nend\n",
+              "description": "Noncompliant code where all branches of the `case` statement execute the same code, indicating that the `case` structure may be unnecessary or incorrectly implemented.",
+              "pattern": "case\\s+.*\\n\\s*when\\s+.*\\n\\s*doSomething\\(\\)\\n\\s*when\\s+.*\\n\\s*doSomething\\(\\)\\n\\s*when\\s+.*\\n\\s*doSomething\\(\\)\\n\\s*else\\n\\s*doSomething\\(\\)"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify conditional structures (if-else chains, case statements) where all branches have the same implementation.",
+            "Determine if the conditional structure is necessary or if it can be simplified or removed.",
+            "If the conditional structure is required, ensure that each branch has distinct and meaningful logic.",
+            "Refactor the code to remove redundant conditions and improve clarity.",
+            "Test the updated code to ensure that the refactoring does not introduce new issues and that the logic is correctly applied."
+          ],
+          "examples": [
+            {
+              "code": "if b == 0\n  doSomething()\nelsif b == 1\n  doSomethingElse()\nend\n",
+              "description": "Refactored code where each branch has distinct logic, ensuring that the conditional structure is meaningful and necessary."
+            }
+          ]
+        },
+        "rationale": "Having all branches of a conditional structure with the same implementation indicates redundant or unnecessary code. Removing or refactoring such conditions improves code clarity and ensures that conditional logic is correctly applied, reducing the risk of bugs and improving maintainability."
+      },
+  {
+        "id": "R009",
+        "title": "All Branches in a Conditional Structure Should Not Have Exactly the Same Implementation",
+        "description": "Detects instances where all branches in a conditional structure (e.g., if-else or case statements) have the same implementation. This indicates a potential issue, such as a copy-paste error or an unnecessary conditional structure that should be removed.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["conditional statements", "code clarity", "maintenance", "refactoring"],
+        "severity": "Major",
+        "cwe": "CWE-17: Code with Duplicate Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "if b == 0\n  doSomething()\nelsif b == 1\n  doSomething()\nend\n",
+              "description": "Compliant code where each branch of the conditional structure has distinct logic, ensuring that the conditions are meaningful and not redundant."
+            }
+          ],
+          "negative": [
+            {
+              "code": "if b == 0\n  doOneMoreThing()\nelse\n  doOneMoreThing()\nend\n",
+              "description": "Noncompliant code where both branches of the `if-else` structure have the same implementation, suggesting a potential copy-paste error or redundant conditional check.",
+              "pattern": "if\\s+.*\\n\\s*else\\s*\\n\\s*doOneMoreThing\\(\\)"
+            },
+            {
+              "code": "case i\nwhen 1\n  doSomething()\nwhen 2\n  doSomething()\nwhen 3\n  doSomething()\nelse\n  doSomething()\nend\n",
+              "description": "Noncompliant code where all branches of the `case` statement execute the same code, indicating that the `case` structure may be unnecessary or incorrectly implemented.",
+              "pattern": "case\\s+.*\\n\\s*when\\s+.*\\n\\s*doSomething\\(\\)\\n\\s*when\\s+.*\\n\\s*doSomething\\(\\)\\n\\s*when\\s+.*\\n\\s*doSomething\\(\\)\\n\\s*else\\n\\s*doSomething\\(\\)"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify conditional structures (if-else chains, case statements) where all branches have the same implementation.",
+            "Determine if the conditional structure is necessary or if it can be simplified or removed.",
+            "If the conditional structure is required, ensure that each branch has distinct and meaningful logic.",
+            "Refactor the code to remove redundant conditions and improve clarity.",
+            "Test the updated code to ensure that the refactoring does not introduce new issues and that the logic is correctly applied."
+          ],
+          "examples": [
+            {
+              "code": "if b == 0\n  doSomething()\nelsif b == 1\n  doSomethingElse()\nend\n",
+              "description": "Refactored code where each branch has distinct logic, ensuring that the conditional structure is meaningful and necessary."
+            }
+          ]
+        },
+        "rationale": "Having all branches of a conditional structure with the same implementation indicates redundant or unnecessary code. Removing or refactoring such conditions improves code clarity and ensures that conditional logic is correctly applied, reducing the risk of bugs and improving maintainability."
+      },
+   {
+    
+        "id": "R010",
+        "title": "Non-existent Operators Like '=+' Should Not Be Used",
+        "description": "Detects instances where non-existent operator pairs such as '=+', '=-', or '=!' are used. These operators are confusing because they do not perform the same operations as their mirrored counterparts ('+=', '-=', or '!='). They can lead to unexpected behavior and bugs in the code.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["operators", "code clarity", "maintainability", "bug prevention"],
+        "severity": "Major",
+        "cwe": "CWE-69: Improper Handling of Special Conditions",
+        "examples": {
+          "positive": [
+            {
+              "code": "target = -5\nnum = 3\ntarget -= num # Correct: Subtract 'num' from 'target'\n",
+              "description": "Compliant code where the operator '-=' is used correctly to subtract the value of 'num' from 'target'."
+            },
+            {
+              "code": "target = -5\nnum = 3\ntarget = -num # Correct: Assign the negative value of 'num' to 'target'\n",
+              "description": "Compliant code where proper spacing avoids confusion between the unary minus operator and the assignment operator."
+            }
+          ],
+          "negative": [
+            {
+              "code": "target = -5\nnum = 3\ntarget =- num # Noncompliant: Confusing and unintended result. 'target' becomes -3\n",
+              "description": "Noncompliant code where '= -' is used, leading to confusion about the intended operation. This results in 'target' being assigned -3 instead of performing subtraction.",
+              "pattern": "target\\s*=\\s*-[^\\s]+"
+            },
+            {
+              "code": "target = -5\nnum = 3\ntarget =+ num # Noncompliant: Confusing and unintended result. 'target' becomes 3\n",
+              "description": "Noncompliant code where '= +' is used, leading to an unintended assignment of the value of 'num' to 'target'.",
+              "pattern": "target\\s*=\\s*-[^\\s]+"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify occurrences of non-existent operators like '=+', '=-', or '=!'.",
+            "Replace these operators with the correct operators that achieve the intended result (e.g., use '-=' for subtraction or '= -' with proper spacing).",
+            "Review the code to ensure that no unintended behavior is introduced.",
+            "Test the updated code to confirm that the changes produce the expected results and improve clarity."
+          ],
+          "examples": [
+            {
+              "code": "target = -5\nnum = 3\ntarget -= num # Refactored code where the correct '-=' operator is used\n",
+              "description": "Refactored code where the non-existent operator is replaced with the correct '-=' operator for subtracting 'num' from 'target'."
+            },
+            {
+              "code": "target = -5\nnum = 3\ntarget = -num # Refactored code with correct spacing to avoid confusion\n",
+              "description": "Refactored code where proper spacing is used to avoid confusion between unary minus and assignment."
+            }
+          ]
+        },
+        "rationale": "Using non-existent operators or incorrect spacing can lead to confusing and unintended results in the code. By using correct operators and proper spacing, you ensure that the code behaves as expected and is easier to understand and maintain."
+      },
+  {
+        "id": "R011",
+        "title": "Related 'if/elsif' Statements and 'when' in a 'case' Should Not Have the Same Condition",
+        "description": "Detects instances where conditions in 'if/elsif' chains or 'case' statements are duplicated. Duplicating conditions leads to dead code and potential bugs, as only the first matching condition will be executed, rendering subsequent conditions redundant or unreachable.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["conditional statements", "code clarity", "maintenance", "bug prevention"],
+        "severity": "Major",
+        "cwe": "CWE-15: Incorrect Calculation",
+        "examples": {
+          "positive": [
+            {
+              "code": "if param == 1\n  openWindow()\nelsif param == 2\n  closeWindow()\nelsif param == 3\n  moveWindowToTheBackground()\nend\n",
+              "description": "Compliant code where each condition in the 'if/elsif' chain is unique, ensuring that each branch executes distinct logic."
+            },
+            {
+              "code": "case i\n  when 1\n    doSomething()\n  when 3\n    doSomethingElse()\n  else\n    handleDefault()\nend\n",
+              "description": "Compliant code where each 'when' clause in the 'case' statement is unique, avoiding redundant or unreachable code."
+            }
+          ],
+          "negative": [
+            {
+              "code": "if param == 1\n  openWindow()\nelsif param == 2\n  closeWindow()\nelsif param == 1  # Noncompliant\n  moveWindowToTheBackground()\nend\n",
+              "description": "Noncompliant code where the condition 'param == 1' is duplicated in the 'if/elsif' chain, making the second 'elsif' redundant and unreachable.",
+              "pattern": "elsif\\s+param\\s+==\\s+1"
+            },
+            {
+              "code": "case i\n  when 1\n    # ...\n  when 3\n    # ...\n  when 1  # Noncompliant\n    # ...\n  else\n    # ...\nend\n",
+              "description": "Noncompliant code where the condition 'when 1' is duplicated in the 'case' statement, making the second 'when' clause redundant and unreachable.",
+              "pattern": "when\\s+1\\s*\\n\\s*#\\s*..."
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify duplicated conditions in 'if/elsif' chains or 'case' statements.",
+            "Remove or adjust redundant conditions to ensure that each condition is unique and necessary.",
+            "Review the logic to confirm that the changes preserve the intended behavior of the code.",
+            "Test the updated code to ensure that it behaves as expected and that no logical errors are introduced."
+          ],
+          "examples": [
+            {
+              "code": "if param == 1\n  openWindow()\nelsif param == 2\n  closeWindow()\nelsif param == 3\n  moveWindowToTheBackground()\nend\n",
+              "description": "Refactored code where duplicate conditions are removed, making each condition in the 'if/elsif' chain unique and ensuring proper execution."
+            },
+            {
+              "code": "case i\n  when 1\n    doSomething()\n  when 3\n    doSomethingElse()\n  else\n    handleDefault()\nend\n",
+              "description": "Refactored code where duplicate 'when' clauses are removed, making each clause unique and ensuring proper execution."
+            }
+          ]
+        },
+        "rationale": "Duplicated conditions in 'if/elsif' chains or 'case' statements lead to dead code and potential bugs. Ensuring that each condition is unique prevents redundancy, maintains logical correctness, and improves code maintainability."
+      },
+  {
+   
+        "id": "R012",
+        "title": "Identical Expressions Should Not Be Used on Both Sides of a Binary Operator",
+        "description": "Detects instances where the same expression is used on both sides of a binary operator. This often indicates a code defect or redundancy. In logical operations, it may be a copy/paste error or unnecessary duplication. For bitwise and most mathematical operations, identical expressions should be simplified to improve code clarity.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["binary operators", "code clarity", "maintenance", "bug prevention"],
+        "severity": "Major",
+        "cwe": "CWE-480: Use of Incorrect Operator",
+        "examples": {
+          "positive": [
+            {
+              "code": "result = a && b # Logical AND with different expressions\n",
+              "description": "Compliant code where the logical operator has distinct expressions on both sides, ensuring proper logical evaluation."
+            },
+            {
+              "code": "result = a | b # Bitwise OR with different expressions\n",
+              "description": "Compliant code where the bitwise operator has distinct expressions on both sides, ensuring proper bitwise operation."
+            }
+          ],
+          "negative": [
+            {
+              "code": "result = a && a # Noncompliant: Identical expressions on both sides of the logical AND operator\n",
+              "description": "Noncompliant code where the logical AND operator has identical expressions on both sides, leading to redundancy and potential logical errors.",
+              "pattern": "&&\\s+.*\\s+&&\\s+.*"
+            },
+            {
+              "code": "result = a & a # Noncompliant: Identical expressions on both sides of the bitwise AND operator\n",
+              "description": "Noncompliant code where the bitwise AND operator has identical expressions on both sides, which is redundant and should be simplified.",
+              "pattern": "&\\s+.*\\s+&\\s+.*"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify instances where identical expressions are used on both sides of a binary operator.",
+            "Replace or simplify the expressions to ensure that the code is clear and avoids unnecessary redundancy.",
+            "Review the logic to confirm that the changes maintain the intended behavior and do not introduce new issues.",
+            "Test the updated code to ensure that it functions correctly and that any redundant or misleading code is removed."
+          ],
+          "examples": [
+            {
+              "code": "result = a && (b != 0) # Refactored code with distinct expressions on both sides of the logical AND operator\n",
+              "description": "Refactored code where identical expressions are replaced with distinct ones, improving clarity and logical correctness."
+            },
+            {
+              "code": "result = a & (b ^ 1) # Refactored code with distinct expressions on both sides of the bitwise AND operator\n",
+              "description": "Refactored code where identical expressions are replaced with distinct ones, ensuring proper bitwise operation."
+            }
+          ]
+        },
+        "rationale": "Using identical expressions on both sides of a binary operator leads to redundancy and potential logical errors. Simplifying or correcting these expressions improves code clarity, correctness, and maintainability."
+      },
+  {
+  
+        "id": "R013",
+        "title": "All Code Should Be Reachable",
+        "description": "Detects instances where code after a jump statement (e.g., `return`, `break`, or `next`) is unreachable. Such code is considered dead code because the control flow has already moved out of the current code block, rendering any statements that follow ineffective.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["control flow", "dead code", "code clarity", "maintenance"],
+        "severity": "Major",
+        "cwe": "CWE-561: Dead Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "def foo(a)\n  i = 10\n  result = a + i\n  return result\nend\n",
+              "description": "Compliant code where all code before the `return` statement is reachable and properly executed."
+            },
+            {
+              "code": "def foo(a)\n  if a > 0\n    return a\n  else\n    return -a\n  end\nend\n",
+              "description": "Compliant code where all branches are reachable and no code is left unreachable."
+            }
+          ],
+          "negative": [
+            {
+              "code": "def foo(a)\n  i = 10\n  return a + i    # Noncompliant: Code after `return` is unreachable\n  i += 1          # dead code\nend\n",
+              "description": "Noncompliant code where `i += 1` is unreachable due to the preceding `return` statement. The code after `return` does not execute and is therefore considered dead code.",
+              "pattern": "return\\s+.*\\s*\\n\\s*[^\\n]*"
+            },
+            {
+              "code": "def foo(a)\n  if a > 0\n    break   # Noncompliant: Code after `break` in a loop is unreachable\n    puts a\n  end\nend\n",
+              "description": "Noncompliant code where `puts a` is unreachable due to the `break` statement preceding it. The `break` statement exits the loop, making any subsequent code in the loop dead code.",
+              "pattern": "break\\s*\\n\\s*[^\\n]*"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify code blocks where jump statements (`return`, `break`, `next`) are used.",
+            "Ensure that no code following these statements is unreachable and consider removing or refactoring it.",
+            "Review and refactor the code to ensure that all necessary statements are reachable and serve their intended purpose.",
+            "Test the updated code to confirm that it behaves as expected and that no logical errors are introduced by removing or refactoring unreachable code."
+          ],
+          "examples": [
+            {
+              "code": "def foo(a)\n  i = 10\n  return a + i\nend\n",
+              "description": "Refactored code where unreachable code after `return` is removed, ensuring that all remaining code is reachable and effective."
+            },
+            {
+              "code": "def foo(a)\n  if a > 0\n    return a\n  else\n    return -a\n  end\nend\n",
+              "description": "Refactored code where no code is unreachable, with all conditions and return statements properly handled."
+            }
+          ]
+        },
+        "rationale": "Ensuring all code is reachable prevents issues related to dead code and improves code clarity. Removing or refactoring unreachable code ensures that the codebase remains clean, maintainable, and logically correct."
+      },
+      {
+        "id": "R026",
+        "title": "Variables Should Not Be Self-Assigned",
+        "description": "Detects instances where a variable is assigned to itself. Such self-assignment is redundant and either indicates a coding mistake or unnecessary code that should be removed. The re-assignment is either a mistake where another variable was intended or simply redundant.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["variable assignment", "redundancy", "code clarity", "maintenance"],
+        "severity": "Major",
+        "cwe": "CWE-571: Expression always evaluates to true",
+        "examples": {
+          "positive": [
+            {
+              "code": "def set_name(name)\n  @name = name\nend\n",
+              "description": "Compliant code where the instance variable `@name` is assigned the value of the parameter `name`, updating the object's state as intended."
+            },
+            {
+              "code": "def calculate_area(length, width)\n  area = length * width\n  return area\nend\n",
+              "description": "Compliant code where a variable `area` is assigned a calculated value and used meaningfully in the function."
+            }
+          ],
+          "negative": [
+            {
+              "code": "def set_name(name)\n  name = name  # Noncompliant: Self-assignment is redundant\nend\n",
+              "description": "Noncompliant code where `name` is assigned to itself, which is redundant and serves no purpose.",
+              "pattern": "name\\s*=\\s*name"
+            },
+            {
+              "code": "def update_value(x)\n  x = x + 1  # Noncompliant: Self-assignment does not change the value of x\nend\n",
+              "description": "Noncompliant code where `x` is assigned an incremented value of itself, which is redundant and does not modify `x` meaningfully.",
+              "pattern": "x\\s*=\\s*x\\s*\\+\\s*1"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify instances where a variable is assigned to itself.",
+            "Determine if the self-assignment is a mistake or redundant.",
+            "Replace or remove redundant assignments, ensuring that each variable assignment has a meaningful purpose.",
+            "Review the code to ensure that all changes maintain the intended functionality and do not introduce new issues.",
+            "Test the updated code to confirm that the changes improve code clarity and functionality."
+          ],
+          "examples": [
+            {
+              "code": "def set_name(name)\n  @name = name\nend\n",
+              "description": "Refactored code where self-assignment is removed, and the correct assignment of `@name` is used."
+            },
+            {
+              "code": "def calculate_area(length, width)\n  area = length * width\n  return area\nend\n",
+              "description": "Refactored code where self-assignment is removed, and the variable `area` is assigned a meaningful value."
+            }
+          ]
+        },
+        "rationale": "Self-assignment of variables is redundant and can indicate a coding mistake. Removing such redundancy improves code clarity and maintainability by ensuring that each variable assignment has a meaningful purpose."
+      },
+      {
+        "id": "R027",
+        "title": "Useless 'if true ...' and 'if false ...' Blocks Should Be Removed",
+        "description": "Detects instances where `if` statements have conditions that are always true or always false. These blocks of code are either redundant or non-functional and should be removed to improve code readability and maintainability. `if true` blocks should be replaced with direct code execution, and `if false` blocks should be removed.",
+        "impact": "Major",
+        "category": "Reliability",
+        "tags": ["control flow", "redundancy", "code clarity", "maintenance"],
+        "severity": "Major",
+        "cwe": "CWE-561: Dead Code",
+        "examples": {
+          "positive": [
+            {
+              "code": "def process_data(data)\n  if data\n    process(data)\n  end\nend\n",
+              "description": "Compliant code where the `if` condition is meaningful and affects the flow of execution."
+            },
+            {
+              "code": "def handle_error\n  log_error\nend\n",
+              "description": "Compliant code where `handle_error` executes the logging function directly, without redundant `if` statements."
+            }
+          ],
+          "negative": [
+            {
+              "code": "def debug_code\n  if true\n    doSomething()  # Noncompliant: Block is always executed\n  end\nend\n",
+              "description": "Noncompliant code where `if true` makes the block always execute, rendering the `if` statement redundant.",
+              "pattern": "if\\s+true\\s*\\n\\s*[^\\n]*"
+            },
+            {
+              "code": "def skip_code\n  if false\n    doNothing()  # Noncompliant: Block is never executed\n  end\nend\n",
+              "description": "Noncompliant code where `if false` makes the block never execute, making the `if` statement redundant and the block unreachable.",
+              "pattern": "if\\s+false\\s*\\n\\s*[^\\n]*"
+            }
+          ]
+        },
+        "fix": {
+          "steps": [
+            "Identify instances of `if true` and `if false` blocks in the code.",
+            "Remove `if true` blocks and execute the contained code directly.",
+            "Remove `if false` blocks entirely as they contain unreachable code.",
+            "Review the code to ensure that removing these blocks does not affect the intended functionality.",
+            "Test the updated code to confirm that the changes improve code clarity and maintain expected behavior."
+          ],
+          "examples": [
+            {
+              "code": "def process_data(data)\n  process(data)\nend\n",
+              "description": "Refactored code where the `if true` block is removed, and the code is executed directly."
+            },
+            {
+              "code": "def handle_error\n  log_error\nend\n",
+              "description": "Refactored code where the `if false` block is removed, and the code is executed directly."
+            }
+          ]
+        },
+        "rationale": "Useless `if true ...` and `if false ...` blocks clutter the code and can lead to confusion or maintenance issues. Removing these blocks improves code readability and ensures that only relevant code is present, which simplifies maintenance and enhances code clarity."
+      }
+    ]
+  }
+  
+  
